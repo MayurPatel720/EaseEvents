@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - preview/* # Any branch starting with 'preview/' will trigger preview deployments
+      - preview/*
 
 jobs:
   build:

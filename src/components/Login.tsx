@@ -7,7 +7,8 @@ import {
   loginStart,
   loginSuccess,
 } from "../Store/Reducers/AuthReducer";
-import { RootState } from "@reduxjs/toolkit/query";
+
+import store from "../Store/store";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -16,6 +17,8 @@ const Login = () => {
     username: "",
     password: "",
   });
+  type RootState = ReturnType<typeof store.getState>;
+
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
   const handleLogin = async (e: FormEvent) => {

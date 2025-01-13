@@ -5,18 +5,29 @@ import { MenuItem } from "primereact/menuitem";
 import { useNavigate } from "react-router";
 import ContactCard from "./Contactcard";
 
+// Extend the MenuItem type to include our custom properties
+interface CustomMenuItem extends MenuItem {
+  badge?: number;
+  items?: CustomMenuItem[];
+}
+
 export default function TemplateDemo() {
   const navigate = useNavigate();
 
-  const itemRenderer = (item: MenuItem) => (
-    <a className="flex align-items-center p-menuitem-link">
-      <span className={item.icon} />
-      <span className="mx-2">{item.label}</span>
-      {item.badge && <Badge className="ml-auto" value={item.badge} />}
-    </a>
-  );
+  const itemRenderer = (item: MenuItem) => {
+    const customItem = item as CustomMenuItem;
+    return (
+      <a className="flex align-items-center p-menuitem-link">
+        <span className={customItem.icon} />
+        <span className="mx-2">{customItem.label}</span>
+        {customItem.badge && (
+          <Badge className="ml-auto" value={customItem.badge} />
+        )}
+      </a>
+    );
+  };
 
-  const items: MenuItem[] = [
+  const items: CustomMenuItem[] = [
     {
       label: "Home",
       icon: "pi pi-home",
@@ -48,7 +59,7 @@ export default function TemplateDemo() {
           template: itemRenderer,
         },
         {
-          separator: true, // Defines a separator
+          separator: true,
         },
         {
           label: "Templates",
@@ -85,7 +96,7 @@ export default function TemplateDemo() {
       }}
       alt="logo"
       src="./src/assets/EaseEvent logo.png"
-      className="h-[35px] ml-1 mr-1 hover: cursor-pointer"
+      className="h-[35px] ml-1 mr-1 hover:cursor-pointer"
     />
   );
 
@@ -95,7 +106,7 @@ export default function TemplateDemo() {
         <ContactCard />
       </div>
       <Avatar
-        className="hover: cursor-pointer"
+        className="hover:cursor-pointer"
         image="https://primefaces.org/cdn/primereact/images/avatar/amyelsner.png"
         shape="circle"
       />

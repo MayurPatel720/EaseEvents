@@ -8,7 +8,6 @@ import ContactCard from "./Contactcard";
 export default function TemplateDemo() {
   const navigate = useNavigate();
 
-  // Custom renderer for menu items
   const itemRenderer = (item: MenuItem) => (
     <a className="flex align-items-center p-menuitem-link">
       <span className={item.icon} />
@@ -17,7 +16,6 @@ export default function TemplateDemo() {
     </a>
   );
 
-  // Menu items with TypeScript support
   const items: MenuItem[] = [
     {
       label: "Home",
@@ -93,7 +91,6 @@ export default function TemplateDemo() {
 
   const end = (
     <div className="flex align-items-center gap-2 group">
-      {/* Avatar component */}
       <div className="hidden group-hover:block">
         <ContactCard />
       </div>
@@ -102,8 +99,6 @@ export default function TemplateDemo() {
         image="https://primefaces.org/cdn/primereact/images/avatar/amyelsner.png"
         shape="circle"
       />
-
-      {/* ContactCard shown on Avatar hover */}
     </div>
   );
 

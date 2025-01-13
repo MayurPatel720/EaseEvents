@@ -3,9 +3,11 @@ import { Badge } from "primereact/badge";
 import { Avatar } from "primereact/avatar";
 import { MenuItem } from "primereact/menuitem";
 import { useNavigate } from "react-router";
+import ContactCard from "./Contactcard";
 
 export default function TemplateDemo() {
   const navigate = useNavigate();
+
   // Custom renderer for menu items
   const itemRenderer = (item: MenuItem) => (
     <a className="flex align-items-center p-menuitem-link">
@@ -20,6 +22,9 @@ export default function TemplateDemo() {
     {
       label: "Home",
       icon: "pi pi-home",
+      command: () => {
+        navigate("/");
+      },
     },
     {
       label: "Features",
@@ -32,19 +37,16 @@ export default function TemplateDemo() {
         {
           label: "Core",
           icon: "pi pi-bolt",
-
           template: itemRenderer,
         },
         {
           label: "Blocks",
           icon: "pi pi-server",
-
           template: itemRenderer,
         },
         {
           label: "UI Kit",
           icon: "pi pi-pencil",
-
           template: itemRenderer,
         },
         {
@@ -90,16 +92,18 @@ export default function TemplateDemo() {
   );
 
   const end = (
-    <div className="flex align-items-center gap-2">
-      {/* <InputText
-        placeholder="Search"
-        type="text"
-        className="w-8rem sm:w-auto"
-      /> */}
+    <div className="flex align-items-center gap-2 group">
+      {/* Avatar component */}
+      <div className="hidden group-hover:block">
+        <ContactCard />
+      </div>
       <Avatar
+        className="hover: cursor-pointer"
         image="https://primefaces.org/cdn/primereact/images/avatar/amyelsner.png"
         shape="circle"
       />
+
+      {/* ContactCard shown on Avatar hover */}
     </div>
   );
 

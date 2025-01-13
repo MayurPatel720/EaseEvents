@@ -1,11 +1,24 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-const initialState = {
-  token: null,
-  user: null,
-  isAuthenticated: false,
+interface User {
+  _id: string;
+  username: string;
+  email: string;
+}
+
+interface AuthState {
+  token: string | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  user: User | null;
+  error: string | null;
+}
+
+const initialState: AuthState = {
+  token: localStorage.getItem("token"),
+  isAuthenticated: !!localStorage.getItem("token"),
   loading: false,
+  user: null,
   error: null,
 };
 
@@ -13,36 +26,42 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    loginRequest: (state) => {
+    loginStart: (state) => {
       state.loading = true;
+      state.error = null;
     },
-    loginSuccess: (state, action) => {
+    loginSuccess: (
+      state,
+      action: PayloadAction<{ token: string; user: User }>
+    ) => {
+      state.loading = false;
+      state.isAuthenticated = true;
       state.token = action.payload.token;
       state.user = action.payload.user;
-      state.isAuthenticated = true;
-      state.loading = false;
-      state.error = null;
       localStorage.setItem("token", action.payload.token);
-      localStorage.setItem("user", JSON.stringify(action.payload.user));
     },
-    loginFailure: (state, action) => {
+    loginFailure: (state, action: PayloadAction<string>) => {
       state.loading = false;
       state.error = action.payload;
+      state.isAuthenticated = false;
+      state.token = null;
+      state.user = null;
+      localStorage.removeItem("token");
     },
     logout: (state) => {
       state.token = null;
-      state.user = null;
       state.isAuthenticated = false;
+      state.user = null;
       localStorage.removeItem("token");
-      localStorage.removeItem("user");
+    },
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+      state.isAuthenticated = true;
+      state.loading = false;
     },
   },
 });
 
-export const { loginRequest, loginSuccess, loginFailure, logout } =
+export const { loginStart, loginSuccess, loginFailure, logout, setUser } =
   authSlice.actions;
-
-export const selectAuth = (state: { auth: any }) => state.auth;
-
 export default authSlice.reducer;
-  

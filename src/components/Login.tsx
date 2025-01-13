@@ -1,21 +1,47 @@
-import axios from "axios";
-import React from "react";
-import { useNavigate } from "react-router";
+import { useState, FormEvent } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
-const Login: React.FC = () => {
+import {
+  loginFailure,
+  loginStart,
+  loginSuccess,
+} from "../Store/Reducers/AuthReducer";
+import { RootState } from "@reduxjs/toolkit/query";
+
+const Login = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [username, setUsername] = React.useState("");
-  const [password, setPassword] = React.useState("");
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: "",
+  });
+  const { loading, error } = useSelector((state: RootState) => state.auth);
 
-  const handlesubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const res = await axios.post("http://localhost:8000/user/login", {
-      username,
-      password,
-    });
-    if (res.status === 200) {
-      console.log("Successfully login!");
+  const handleLogin = async (e: FormEvent) => {
+    e.preventDefault();
+    dispatch(loginStart());
+
+    try {
+      const response = await fetch("http://localhost:8000/user/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      dispatch(loginSuccess({ token: data.token, user: data.user }));
       navigate("/");
+    } catch (err) {
+      dispatch(
+        loginFailure(err instanceof Error ? err.message : "Login failed")
+      );
     }
   };
 
@@ -43,7 +69,7 @@ const Login: React.FC = () => {
           <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
             Login
           </h2>
-          <form method="post" onSubmit={handlesubmit}>
+          <form method="post" onSubmit={handleLogin}>
             <div className="mb-4">
               <label
                 htmlFor="username"
@@ -54,8 +80,10 @@ const Login: React.FC = () => {
               <input
                 type="text"
                 id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={credentials.username}
+                onChange={(e) =>
+                  setCredentials({ ...credentials, username: e.target.value })
+                }
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 placeholder="Enter your username"
               />
@@ -70,19 +98,26 @@ const Login: React.FC = () => {
               <input
                 type="password"
                 id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={credentials.password}
+                onChange={(e) =>
+                  setCredentials({ ...credentials, password: e.target.value })
+                }
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 placeholder="Enter your password"
               />
             </div>
             <button
               type="submit"
+              disabled={loading}
               className="w-full bg-blue-500 text-white py-2 rounded-md font-semibold hover:bg-blue-600 transition duration-300"
             >
-              Login
+              {loading ? "Loading..." : "Login"}
             </button>
           </form>
+          {error && error !== "No token found" && (
+            <p className="text-red-600 text-center mt-4">{error}</p>
+          )}
+
           <p className="text-center text-gray-600 mt-4">
             Don’t have an account?{" "}
             <a

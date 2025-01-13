@@ -1,7 +1,9 @@
 import { PanelMenu } from "primereact/panelmenu";
 import { MenuItem } from "primereact/menuitem";
 import "../css/sidebar.css";
+import { useNavigate } from "react-router";
 export default function MultipleDemo() {
+  const navigate = useNavigate();
   const items: MenuItem[] = [
     {
       label: "Files",
@@ -66,8 +68,11 @@ export default function MultipleDemo() {
       icon: "pi pi-desktop",
       items: [
         {
-          label: "Phone",
+          label: "Test",
           icon: "pi pi-mobile",
+          command: () => {
+            navigate("/test");
+          },
         },
         {
           label: "Desktop",

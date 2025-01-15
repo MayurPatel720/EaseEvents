@@ -9,6 +9,7 @@ import { loginFailure, setUser } from "./Store/Reducers/AuthReducer";
 import Home from "./components/Home";
 import RegisterForm from "./components/Register";
 import Test from "./components/Test";
+import ProfilePage from "./components/Profile";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -64,6 +65,7 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/test" element={<Test />} />
+                <Route path="/profile" element={<ProfilePage />} />
               </Routes>
             </PrivateRouteWrapper>
           }

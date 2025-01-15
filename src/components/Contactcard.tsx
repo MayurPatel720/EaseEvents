@@ -1,13 +1,15 @@
-import { useDispatch } from "react-redux";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { logout } from "../Store/Reducers/AuthReducer";
 
 const ContactCard = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const user = useSelector((store: any) => store.auth.user);
+
   return (
     <div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-6 w-80 absolute right-16  sm:max-w-lg lg:max-w-xl">
-      {/* Profile Section */}
       <div
         onClick={() => navigate("/profile")}
         className="flex cursor-pointer items-center space-x-4 mb-4 "
@@ -18,11 +20,14 @@ const ContactCard = () => {
           alt="Profile"
         />
         <div>
-          <h2 className="text-xl font-semibold">Olivia Rhye</h2>
+          {user && (
+            <>
+              <h2 className="text-xl font-semibold">{user.username}</h2>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Buttons Section */}
       <div className="flex flex-wrap gap-2 mb-6">
         <button className="flex-1 bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-md">
           Audio
@@ -38,17 +43,18 @@ const ContactCard = () => {
         </button>
       </div>
 
-      {/* Details Section */}
       <div className="space-y-4">
-        <DetailRow label="Name" value="Olivia Rhye" />
-        {/* <DetailRow label="Number" value="(808) 676-7382" /> */}
-        <DetailRow label="Location" value="Enter an address..." />
-        <DetailRow label="Email" value="Enter an email..." />
-        <DetailRow label="Company" value="Enter a name..." />
-        <DetailRow label="Status" value="Add a tag..." />
+        {user && (
+          <>
+            <DetailRow label="Name" value={user.username} />
+            {/* <DetailRow label="Number" value="(808) 676-7382" /> */}
+            <DetailRow label="Location" value="Enter an address..." />
+            <DetailRow label="Email" value={user.email} />
+            <DetailRow label="Company" value="Enter a name..." />
+            <DetailRow label="Status" value="Add a tag..." />
+          </>
+        )}
       </div>
-
-      {/* Add New Detail */}
 
       <div className="mt-4">
         <button

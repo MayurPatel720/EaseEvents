@@ -9,7 +9,7 @@ const ContactCard = () => {
   const user = useSelector((store: any) => store.auth.user);
 
   return (
-    <div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-6 w-80 absolute right-16  sm:max-w-lg lg:max-w-xl">
+    <div className="max-w-md mx-auto z-10 bg-white shadow-md rounded-lg p-6 w-80 absolute right-16  sm:max-w-lg lg:max-w-xl">
       <div
         onClick={() => navigate("/profile")}
         className="flex cursor-pointer items-center space-x-4 mb-4 "

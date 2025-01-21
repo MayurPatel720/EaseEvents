@@ -1,6 +1,7 @@
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import "../css/Login.css";
 
 import {
   loginFailure,
@@ -17,6 +18,7 @@ const Login = () => {
     username: "",
     password: "",
   });
+
   type RootState = ReturnType<typeof store.getState>;
 
   const { loading, error } = useSelector((state: RootState) => state.auth);
@@ -48,22 +50,90 @@ const Login = () => {
     }
   };
 
+  const [currentText, setCurrentText] = useState(0);
+
+  const textVariations = [
+    {
+      title: (
+        <>
+          Welcome to{" "}
+          <span className="text-yellow-300 ease-in-out transform hover:scale-110 hover:text-yellow-400 transition duration-300">
+            EaseEvents
+          </span>
+        </>
+      ),
+      description: (
+        <>
+          Where Every Moment Becomes Effortless. Log In to{" "}
+          <span className="text-yellow-300">
+            {" "}
+            Create, Manage, and Celebrate{" "}
+          </span>
+        </>
+      ),
+    },
+    {
+      title: (
+        <>
+          Simplify Your{" "}
+          <span className="text-yellow-300 ease-in-out transform hover:scale-110 hover:text-yellow-400 transition duration-300">
+            Events
+          </span>
+        </>
+      ),
+      description: (
+        <>
+          {" "}
+          <span className="text-yellow-300">
+            Plan, Organize, and Enjoy!
+          </span>{" "}
+          Your Event Management Solution is Here.
+        </>
+      ),
+    },
+    {
+      title: (
+        <>
+          <span className="text-yellow-300 ease-in-out transform hover:scale-110 hover:text-yellow-400 transition duration-300">
+            Effortless
+          </span>{" "}
+          Event Management
+        </>
+      ),
+      description: (
+        <>
+          Make Every Event Memorable.
+          <span className="text-yellow-300"> Sign In </span>to Get Started
+          Today!
+        </>
+      ),
+    },
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentText((prev) => (prev + 1) % textVariations.length);
+    }, 4000); // Change text every 4 seconds
+    return () => clearInterval(interval);
+  }, [textVariations.length]);
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
       <div
         style={{ backgroundColor: "#1C3B62" }}
         className="w-full md:w-1/2 text-white flex flex-col justify-center items-center p-8"
       >
-        <h1 className="text-white text-4xl text-center font-bold mb-4">
-          Welcome to <span className="text-yellow-300">EaseEvents</span>
+        <h1
+          className="text-white text-4xl text-center font-bold mb-4 animate-slide"
+          key={currentText}
+        >
+          {textVariations[currentText].title}
         </h1>
-        <p className="text-base mt-4 text-white text-center">
-          Where Every Moment Becomes Effortless.
-          <br /> Log In to
-          <span className="text-yellow-300">
-            {" "}
-            Create, Manage, and Celebrate!
-          </span>
+        <p
+          className="text-base mt-4 text-white text-center animate-slide"
+          key={`desc-${currentText}`}
+        >
+          {textVariations[currentText].description}
         </p>
       </div>
 

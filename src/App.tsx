@@ -8,8 +8,9 @@ import Login from "./components/Login";
 import { loginFailure, setUser } from "./Store/Reducers/AuthReducer";
 import Home from "./components/Home";
 import RegisterForm from "./components/Register";
-import Test from "./components/Test";
 import ProfilePage from "./components/Profile";
+import AllEvents from "./components/AllEvents";
+import EventForm from "./components/Test";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -64,8 +65,9 @@ const App = () => {
             <PrivateRouteWrapper>
               <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/test" element={<Test />} />
+                <Route path="/events" element={<AllEvents />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/test" element={<EventForm />} />
               </Routes>
             </PrivateRouteWrapper>
           }

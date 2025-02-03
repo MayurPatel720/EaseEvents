@@ -1,0 +1,58 @@
+name: Firebase Deployment with Preview Channels
+
+on:
+  push:
+    branches:
+      - main
+      - preview/*
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build
+        env:
+          CI: false
+        run: npm run build
+
+      - name: Archive Production Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: dist/**
+
+  deploy:
+    name: Deploy to Firebase Hosting
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: dist # Update to use 'dist' instead of 'build'
+
+      - name: Deploy to Preview Channel
+        uses: w9jds/firebase-action@master
+        with:
+          args: hosting:channel:deploy preview-${{ github.ref_name }} --expires 7d
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Deploy to Production (if on main branch)
+        if: ${{ github.ref_name == 'main' }}
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

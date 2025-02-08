@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
+import { api } from "../Queries/Allquery";
 
 interface FormData {
   username: string;
@@ -44,10 +45,7 @@ const RegisterForm: React.FC = () => {
     e.preventDefault();
     if (validateForm()) {
       try {
-        const res = await axios.post(
-          "http://localhost:8000/user/register",
-          formData
-        );
+        const res = await axios.post(`${api}/user/register`, formData);
         if (res.status === 200) {
           console.log("Successfully registered!");
           navigate("/");

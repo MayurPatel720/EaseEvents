@@ -10,7 +10,6 @@ import Home from "./components/Home";
 import RegisterForm from "./components/Register";
 import ProfilePage from "./components/Profile";
 import AllEvents from "./components/AllEvents";
-import EventForm from "./components/Test";
 import EventParticipationForm from "./components/EventParticipationForm";
 import EventDetails from "./components/EventDetails";
 import Participants from "./components/Participants";
@@ -18,6 +17,7 @@ import Volunteers from "./components/Volunteers";
 import Analytics from "./components/Analytics";
 import Promotions from "./components/Promotions";
 import QA from "./components/QA";
+import { api } from "./Queries/Allquery";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -31,7 +31,7 @@ const App = () => {
       }
 
       try {
-        const response = await fetch("http://localhost:8000/user/verify", {
+        const response = await fetch(`${api}/user/verify`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -79,10 +79,22 @@ const App = () => {
                 <Route path="/" element={<Home />} />
                 <Route path="/events" element={<AllEvents />} />
                 <Route path="/events/:eventId" element={<EventDetails />} />
-                <Route path="/events/:eventId/participants" element={<Participants />} />
-                <Route path="/events/:eventId/volunteers" element={<Volunteers />} />
-                <Route path="/events/:eventId/analytics" element={<Analytics />} />
-                <Route path="/events/:eventId/promotions" element={<Promotions />} />
+                <Route
+                  path="/events/:eventId/participants"
+                  element={<Participants />}
+                />
+                <Route
+                  path="/events/:eventId/volunteers"
+                  element={<Volunteers />}
+                />
+                <Route
+                  path="/events/:eventId/analytics"
+                  element={<Analytics />}
+                />
+                <Route
+                  path="/events/:eventId/promotions"
+                  element={<Promotions />}
+                />
                 <Route path="/events/:eventId/qa" element={<QA />} />
                 <Route
                   path="*"
@@ -98,7 +110,6 @@ const App = () => {
                   }
                 />
                 <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/test" element={<EventForm />} />
               </Routes>
             </PrivateRouteWrapper>
           }

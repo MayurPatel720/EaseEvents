@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-// Define the Event schema
 const EventSchema = new Schema(
   {
     title: { type: String, required: true },
@@ -10,6 +9,12 @@ const EventSchema = new Schema(
     startTime: { type: String, required: true },
     endTime: { type: String, required: true },
     image: { type: String, required: true },
+    participants: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Participant",
+      },
+    ],
     ticketCategory: {
       type: String,
       enum: ["free", "paid"],
@@ -22,12 +27,16 @@ const EventSchema = new Schema(
       },
     },
     ticketsAvailable: { type: Number, required: true, min: 0 },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", 
+      required: true,
+    },
   },
   {
-    timestamps: true, // Automatically adds createdAt and updatedAt
+    timestamps: true,
   }
 );
 
-// Create and export the model
 const Event = mongoose.model("Event", EventSchema);
 module.exports = Event;

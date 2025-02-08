@@ -1,6 +1,12 @@
 const nodemailer = require("nodemailer");
 
-const sendTicketEmail = async (email, ticketNumber, qrCode) => {
+const sendTicketEmail = async (
+  email,
+  name,
+  eventName,
+  ticketNumber,
+  qrCodePath
+) => {
   let transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -12,7 +18,7 @@ const sendTicketEmail = async (email, ticketNumber, qrCode) => {
   let mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
-    subject: "Your Event Ticket",
+    subject: `Your Ticket for ${eventName}`,
     html: `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,8 +65,8 @@ const sendTicketEmail = async (email, ticketNumber, qrCode) => {
     }
     .qr-code {
       margin-top: 20px;
-      max-width: 200px;
-      max-height: 200px;
+      width: 200px;
+      height: 200px;
     }
     .footer {
       text-align: center;
@@ -73,14 +79,14 @@ const sendTicketEmail = async (email, ticketNumber, qrCode) => {
 <body>
   <div class="email-container">
     <div class="header">
-      <h1>Your Event Ticket</h1>
+      <h1>Your Ticket for ${eventName}</h1>
     </div>
     <div class="content">
-      <p>Hi there,</p>
-      <p>Thank you for registering for the event! Below are your ticket details:</p>
+      <p>Hello <strong>${name}</strong>,</p>
+      <p>Thank you for registering for <strong>${eventName}</strong>!</p>
       <p class="ticket-number">Ticket Number: <strong>${ticketNumber}</strong></p>
       <p>Scan the QR code below to enter the event:</p>
-      <img src="${qrCode}" alt="QR Code" class="qr-code" />
+      <img src="cid:qrCode" alt="QR Code" class="qr-code" />
     </div>
     <div class="footer">
       <p>If you have any questions, feel free to contact us.</p>
@@ -88,10 +94,20 @@ const sendTicketEmail = async (email, ticketNumber, qrCode) => {
     </div>
   </div>
 </body>
-</html>
-`,
+</html>`,
+
+    // Ensure the QR Code is properly attached
+    attachments: [
+      {
+        filename: "ticket_qr.png",
+        path: qrCodePath, // Path where the QR Code is stored
+        cid: "qrCode", // Ensure this matches the <img> tag in the email template
+        contentType: "image/png", // Ensure correct MIME type
+      },
+    ],
   };
 
+  // Send email
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.log("Error sending email:", error);

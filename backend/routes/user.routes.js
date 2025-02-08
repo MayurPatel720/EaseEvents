@@ -62,7 +62,6 @@ router.get("/verify", async function (req, res) {
   }
 });
 
-// Update the login endpoint to ensure consistent response format
 router.post("/login", async function (req, res) {
   try {
     const { username, password } = req.body;

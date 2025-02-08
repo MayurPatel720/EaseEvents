@@ -15,10 +15,16 @@ import {
   InputNumber,
   InputNumberValueChangeEvent,
 } from "primereact/inputnumber";
-import { useCreateEvent, useGetallEvents } from "../Queries/Allquery";
+import {
+  useCreateEvent,
+  useFetchMyEvent,
+  // useGetallEvents,
+} from "../Queries/Allquery";
 import { useNavigate } from "react-router";
+import { useSelector } from "react-redux";
 
 const AllEvents: React.FC = () => {
+  const user = useSelector((store: any) => store.auth.user);
   const navigate = useNavigate();
   const [visible, setVisible] = useState<boolean>(false);
 
@@ -49,8 +55,17 @@ const AllEvents: React.FC = () => {
     }
   };
 
-  const { data: events, isLoading, isError, error } = useGetallEvents();
+  // const { data: events, isLoading, isError, error } = useGetallEvents();
+  const {
+    data: events,
+    isLoading,
+    isError,
+    error,
+  } = useFetchMyEvent(user?._id);
   const { mutate: createEvent } = useCreateEvent();
+  if (!user) {
+    return <div>Loading user information...</div>;
+  }
 
   const handlesubmit = async (e: any) => {
     e.preventDefault();
@@ -60,10 +75,12 @@ const AllEvents: React.FC = () => {
       date: Date,
       startTime: starttime,
       endTime: endtime,
-      image: "as.png",
+      image:
+        "https://storage.theoryandpractice.ru/tnp/uploads/course_image_unit/000/021/537/image/base_2dd40556b8.jpg",
       ticketCategory: selectedCategory,
       ticketsAvailable: ticketavaible,
       ticketPrice: ticketprice,
+      createdBy: user._id,
     };
     setLoading(true);
     createEvent(formdata, {
@@ -73,6 +90,7 @@ const AllEvents: React.FC = () => {
         console.log("Event creation successful!");
       },
       onError: (error) => {
+        setLoading(false);
         console.error("Failed to create event:", error.message);
       },
     });

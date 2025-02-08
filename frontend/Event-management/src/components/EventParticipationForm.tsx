@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { useFetchEventByID } from "../Queries/Allquery";
+import { api, useFetchEventByID } from "../Queries/Allquery";
 
 const EventParticipationForm: React.FC = () => {
   const { eventId }: any = useParams<{ eventId: string }>();
   const {
     data: event,
     error,
-    isLoading: fetchingevent,
+    isLoading: fetchingEvent,
   } = useFetchEventByID(eventId);
 
   const [name, setName] = useState("");
@@ -18,6 +18,10 @@ const EventParticipationForm: React.FC = () => {
   const [phone, setPhone] = useState("");
   const amount = 500;
   const [isLoading, setIsLoading] = useState(false);
+
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
 
   useEffect(() => {
     const loadRazorpayScript = () => {
@@ -38,19 +42,57 @@ const EventParticipationForm: React.FC = () => {
     loadRazorpayScript();
   }, []);
 
+  const handleFreeRegistration = async () => {
+    if (!name || !email || !phone) {
+      alert("Please fill in all the fields.");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await axios.post(`${api}/payment/create-order`, {
+        amount,
+        name,
+        email,
+        phone,
+        eventId,
+      });
+
+      alert("Registration successful! Check your email for confirmation.");
+    } catch (error) {
+      console.error("Registration error:", error);
+      alert("Registration failed, please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handlePayment = async () => {
     if (!name || !email || !phone) {
       alert("Please fill in all the fields.");
       return;
     }
 
+    if (!isValidEmail(email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const orderResponse = await axios.post(
-        "http://localhost:8000/payment/create-order",
-        { amount, name, email, phone, eventId }
-      );
+      const orderResponse = await axios.post(`${api}/payment/create-order`, {
+        amount,
+        name,
+        email,
+        phone,
+        eventId,
+      });
 
       const {
         id: order_id,
@@ -68,14 +110,13 @@ const EventParticipationForm: React.FC = () => {
         handler: async function (response: any) {
           try {
             const verifyResponse = await axios.post(
-              "http://localhost:8000/payment/verify-payment",
+              `${api}/payment/verify-payment`,
               {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
               }
             );
-            console.log(verifyResponse);
 
             if (verifyResponse.data.success) {
               alert("Payment successful! Check your email for the ticket.");
@@ -106,13 +147,16 @@ const EventParticipationForm: React.FC = () => {
       setIsLoading(false);
     }
   };
-  if (fetchingevent) return <div>Loading...</div>;
+
+  if (fetchingEvent) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
+
   return (
     <div className="max-w-md mx-auto p-6 border rounded-md shadow-md bg-white">
       <h2 className="text-2xl font-bold mb-4 text-center">
         Participate in Event {event.title}
       </h2>
+      <p className="text-black">Tickets available : {event.ticketsAvailable}</p>
       <form className="mt-4 space-y-4">
         <input
           type="text"
@@ -138,18 +182,33 @@ const EventParticipationForm: React.FC = () => {
           className="w-full p-2 border rounded-md"
           required
         />
-        <button
-          type="button"
-          onClick={handlePayment}
-          className={`w-full py-2 text-white rounded-md ${
-            isLoading
-              ? "bg-gray-500 cursor-not-allowed"
-              : "bg-blue-500 hover:bg-blue-600"
-          }`}
-          disabled={isLoading}
-        >
-          {isLoading ? "Processing..." : `Pay ₹${amount} & Register`}
-        </button>
+        {event.ticketCategory === "free" ? (
+          <button
+            type="button"
+            onClick={handleFreeRegistration}
+            className={`w-full py-2 text-white rounded-md ${
+              isLoading
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600"
+            }`}
+            disabled={isLoading}
+          >
+            {isLoading ? "Processing..." : `Register`}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handlePayment}
+            className={`w-full py-2 text-white rounded-md ${
+              isLoading
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600"
+            }`}
+            disabled={isLoading}
+          >
+            {isLoading ? "Processing..." : `Pay ₹${amount} & Register`}
+          </button>
+        )}
       </form>
     </div>
   );

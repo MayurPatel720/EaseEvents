@@ -11,6 +11,7 @@ import {
 } from "../Store/Reducers/AuthReducer";
 
 import store from "../Store/store";
+import { api } from "../Queries/Allquery";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -29,7 +30,7 @@ const Login = () => {
     dispatch(loginStart());
 
     try {
-      const response = await fetch("http://localhost:8000/user/login", {
+      const response = await fetch(`${api}/user/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),

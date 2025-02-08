@@ -5,7 +5,7 @@ import "../css/sidebar.css";
 
 export default function EventSidebar() {
   const navigate = useNavigate();
-  const { eventId } = useParams<{ eventId: string }>(); // Correct way to extract eventId
+  const { eventId } = useParams<{ eventId: string }>();
 
   const items: MenuItem[] = [
     {

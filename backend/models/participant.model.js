@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const qr = require("qrcode");
 const { v4: uuidv4 } = require("uuid");
 const sendTicketEmail = require("../config/emailService");
+const Event = require("../models/event.model");
 
 const ParticipantSchema = new mongoose.Schema({
   name: {
@@ -12,14 +13,12 @@ const ParticipantSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true,
     lowercase: true,
     trim: true,
   },
   phone: {
     type: String,
     required: true,
-    unique: true,
   },
   eventId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -43,7 +42,6 @@ const ParticipantSchema = new mongoose.Schema({
   },
 });
 
-// Generate QR Code and Ticket on Successful Payment
 ParticipantSchema.pre("save", async function (next) {
   if (this.isModified("paymentStatus") && this.paymentStatus === "paid") {
     if (!this.ticketNumber) {
@@ -54,9 +52,15 @@ ParticipantSchema.pre("save", async function (next) {
     if (!this.qrCode) {
       this.qrCode = await qr.toDataURL(this.ticketNumber);
     }
-
-    // Send Email with Ticket & QR Code
-    await sendTicketEmail(this.email, this.ticketNumber, this.qrCode);
+    
+    const event = await Event.findById(this.eventId);
+    await sendTicketEmail(
+      this.email,
+      this.name,
+      event.title,
+      this.ticketNumber,
+      this.qrCodePath
+    );
   }
   next();
 });

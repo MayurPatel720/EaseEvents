@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useParams } from "react-router-dom";
 import EventLayout from "../layout/EventLayout";
 import {
@@ -27,8 +28,8 @@ interface Participant {
 }
 
 const Participants = () => {
-  const { eventId } = useParams();
   const queryClient = useQueryClient();
+  const { eventId }: any = useParams<{ eventId: string }>();
 
   const {
     data: event,
@@ -67,7 +68,9 @@ const Participants = () => {
           { userids: [participant._id] },
           {
             onSuccess: () => {
-              queryClient.invalidateQueries(["participants", eventId]);
+              queryClient.invalidateQueries({
+                queryKey: ["participants", eventId ?? ""],
+              });
               toast.current?.show({
                 severity: "success",
                 summary: "Success",
@@ -139,7 +142,9 @@ const Participants = () => {
           { userids: selectedParticipants },
           {
             onSuccess: () => {
-              queryClient.invalidateQueries(["participants", eventId]);
+              queryClient.invalidateQueries({
+                queryKey: ["participants", eventId ?? ""],
+              });
               toast.current?.show({
                 severity: "success",
                 summary: "Success",
@@ -301,6 +306,7 @@ const Participants = () => {
             onSelectionChange={(e) => setSelectedParticipants(e.value)}
             dataKey="_id"
             paginator
+            selectionMode="multiple"
             rows={10}
             rowsPerPageOptions={[5, 10, 25]}
             globalFilter={globalFilter}

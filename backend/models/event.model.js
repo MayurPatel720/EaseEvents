@@ -15,6 +15,12 @@ const EventSchema = new Schema(
         ref: "Participant",
       },
     ],
+    volunteers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Volunteer",
+      },
+    ],
     ticketCategory: {
       type: String,
       enum: ["free", "paid"],
@@ -29,7 +35,7 @@ const EventSchema = new Schema(
     ticketsAvailable: { type: Number, required: true, min: 0 },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", 
+      ref: "User",
       required: true,
     },
   },

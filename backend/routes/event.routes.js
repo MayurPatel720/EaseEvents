@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Event = require("../models/event.model");
 
+// Existing routes
 router.get("/all", async function (req, res) {
   try {
     const events = await Event.find();
@@ -105,6 +106,87 @@ router.post("/myevents", async (req, res) => {
   } catch (error) {
     console.error("Error fetching events:", error);
     res.status(500).json({ error: "Server error", details: error.message });
+  }
+});
+router.put("/edit/:eventId", async (req, res) => {
+  const eventId = req.params.eventId;
+  try {
+    console.log(`Received request to edit event: ${eventId}`);
+
+    const existingEvent = await Event.findById(eventId);
+    if (!existingEvent) {
+      console.log("Event not found");
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    const {
+      title,
+      venue,
+      date,
+      startTime,
+      endTime,
+      image,
+      ticketCategory,
+      ticketPrice,
+      ticketsAvailable,
+    } = req.body;
+
+    console.log("Request Body:", req.body); // Log received data
+
+    if (
+      !title ||
+      !venue ||
+      !date ||
+      !startTime ||
+      !endTime ||
+      !image ||
+      !ticketCategory ||
+      !ticketsAvailable
+    ) {
+      console.log("Missing required fields");
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Update event
+    existingEvent.title = title;
+    existingEvent.venue = venue;
+    existingEvent.date = date;
+    existingEvent.startTime = startTime;
+    existingEvent.endTime = endTime;
+    existingEvent.image = image;
+    existingEvent.ticketCategory = ticketCategory;
+    existingEvent.ticketPrice = ticketPrice;
+    existingEvent.ticketsAvailable = ticketsAvailable;
+
+    await existingEvent.save();
+    console.log("Event updated successfully");
+
+    res.json({ message: "Event updated successfully", event: existingEvent });
+  } catch (error) {
+    console.error("Error in /edit/:eventId:", error.stack);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.delete("/delete/:eventID", async (req, res) => {
+  const eventId = req.params.eventID;
+  try {
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+  
+
+    // Delete the event
+    await Event.findByIdAndDelete(eventId);
+
+    res.status(200).json({
+      message: "Event deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 

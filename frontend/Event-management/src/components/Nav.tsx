@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Menubar } from "primereact/menubar";
-import { Badge } from "primereact/badge";
 import { Avatar } from "primereact/avatar";
 import { MenuItem } from "primereact/menuitem";
 import { useNavigate } from "react-router";
@@ -11,81 +11,22 @@ interface CustomMenuItem extends MenuItem {
   items?: CustomMenuItem[];
 }
 
-export default function TemplateDemo() {
+export default function TemplateDemo({ toggleSidebar }: any) {
   const navigate = useNavigate();
 
-  const itemRenderer = (item: MenuItem) => {
-    const customItem = item as CustomMenuItem;
-    return (
-      <a className="flex align-items-center p-menuitem-link">
-        <span className={customItem.icon} />
-        <span className="mx-2">{customItem.label}</span>
-        {customItem.badge && (
-          <Badge className="ml-auto" value={customItem.badge} />
-        )}
-      </a>
-    );
-  };
-
   const items: CustomMenuItem[] = [
+    {
+      icon: "pi pi-bars",
+      command: () => {
+        toggleSidebar();
+      },
+    },
     {
       label: "Home",
       icon: "pi pi-home",
       command: () => {
         navigate("/");
       },
-    },
-    {
-      label: "Features",
-      icon: "pi pi-star",
-    },
-    {
-      label: "Projects",
-      icon: "pi pi-search",
-      items: [
-        {
-          label: "Core",
-          icon: "pi pi-bolt",
-          template: itemRenderer,
-        },
-        {
-          label: "Blocks",
-          icon: "pi pi-server",
-          template: itemRenderer,
-        },
-        {
-          label: "UI Kit",
-          icon: "pi pi-pencil",
-          template: itemRenderer,
-        },
-        {
-          separator: true,
-        },
-        {
-          label: "Templates",
-          icon: "pi pi-palette",
-          items: [
-            {
-              label: "Apollo",
-              icon: "pi pi-palette",
-              badge: 2,
-              template: itemRenderer,
-            },
-            {
-              label: "Ultima",
-              icon: "pi pi-palette",
-              badge: 3,
-              template: itemRenderer,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      label: "Contact",
-      icon: "pi pi-envelope",
-      badge: 3,
-      template: itemRenderer,
     },
   ];
 

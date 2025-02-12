@@ -5,7 +5,6 @@ import { Sidebar } from "primereact/sidebar";
 import { Button } from "primereact/button";
 import { FloatLabel } from "primereact/floatlabel";
 import { InputText } from "primereact/inputtext";
-
 import moment from "moment";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Calendar } from "primereact/calendar";
@@ -15,11 +14,7 @@ import {
   InputNumber,
   InputNumberValueChangeEvent,
 } from "primereact/inputnumber";
-import {
-  useCreateEvent,
-  useFetchMyEvent,
-  // useGetallEvents,
-} from "../Queries/Allquery";
+import { useCreateEvent, useFetchMyEvent } from "../Queries/Allquery";
 import { useNavigate } from "react-router";
 import { useSelector } from "react-redux";
 
@@ -236,7 +231,7 @@ const AllEvents: React.FC = () => {
       </Sidebar>
 
       <div className="h-full rounded-xl ">
-        <div className="max-w-6xl mx-auto p-6">
+        <div className="max-w-full mx-auto p-6">
           <div className="flex items-start justify-between">
             <h1 className="text-3xl mt-2 font-bold mb-10  ">All Events</h1>
             <Button
@@ -247,94 +242,96 @@ const AllEvents: React.FC = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {isLoading && (
               <div className="card flex justify-content-center">
                 <ProgressSpinner />
               </div>
             )}
-
             {events?.map((event: any) => (
-              <div key={event._id} className="card flex justify-content-center">
-                <div
-                  className=" md:w-80 rounded-lg shadow-lg bg-white hover:cursor-pointer"
-                  onClick={() =>
-                    navigate(`/events/${event._id}`, { state: { event } })
-                  }
-                >
-                  <div className="relative">
-                    <img
-                      alt={event.title || "Event Image"}
-                      src={
-                        event.image ||
-                        "https://i2.wp.com/wallpapercave.com/wp/wp7488244.jpg"
-                      }
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                    <button
-                      className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:bg-gray-200"
-                      onClick={() => {
-                        const eventUrl = `${
-                          window.location.origin
-                        }/participate/${encodeURIComponent(event._id)}`;
-                        navigator.share({
-                          title: event.title,
-                          text: `Check out this event: ${event.title}!`,
-                          url: eventUrl,
-                        });
-                      }}
-                    >
-                      <i className="pi pi-share-alt"></i>
-                    </button>
+              <div
+                key={event._id}
+                className="rounded-lg shadow-lg bg-white hover:cursor-pointer"
+                onClick={() =>
+                  navigate(`/events/${event._id}`, { state: { event } })
+                }
+              >
+                <div className="relative">
+                  <img
+                    alt={event.title || "Event Image"}
+                    src={
+                      event.image ||
+                      "https://i2.wp.com/wallpapercave.com/wp/wp7488244.jpg"
+                    }
+                    className="w-full h-48 object-cover rounded-t-lg"
+                  />
+                  <button
+                    className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:bg-gray-200"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const eventUrl = `${
+                        window.location.origin
+                      }/participate/${encodeURIComponent(event._id)}`;
+                      navigator.share({
+                        title: event.title,
+                        text: `Check out this event: ${event.title}!`,
+                        url: eventUrl,
+                      });
+                    }}
+                  >
+                    <i className="pi pi-share-alt"></i>
+                  </button>
+                </div>
+
+                <div className="p-4">
+                  <h3 className="text-xl font-bold text-gray-800">
+                    {event.title}
+                  </h3>
+
+                  <div className="flex gap-2 items-center mt-2 text-gray-600">
+                    <i className="pi pi-map-marker"></i>
+                    <p>{event.venue || "Venue to be decided"}</p>
                   </div>
 
-                  <div className="p-4">
-                    <h3 className="text-xl font-bold text-gray-800">
-                      {event.title}
-                    </h3>
+                  <div className="flex gap-2 items-center mt-2 text-gray-600">
+                    <i className="pi pi-calendar"></i>
+                    <p>{moment(event.date).format("DD-MM-YYYY")}</p>
+                  </div>
 
-                    <div className="flex gap-2 items-center mt-2 text-gray-600">
-                      <i className="pi pi-map-marker"></i>
-                      <p>{event.venue || "Venue to be decided"}</p>
-                    </div>
-
-                    <div className="flex gap-2 items-center mt-2 text-gray-600">
-                      <i className="pi pi-calendar"></i>
-                      <p>{moment(event.date).format("DD-MM-YYYY")}</p>
-                    </div>
-                    <div className="flex gap-2 items-center mt-2 text-gray-600">
-                      <i className="pi pi-clock"></i>
+                  <div className="flex gap-2 items-center mt-2 text-gray-600">
+                    <i className="pi pi-clock"></i>
+                    <p>
                       <p>
-                        {event.startTime} - {event.endTime || "TBA"}
+                        {moment(event.startTime).format("hh:mm A")} -{" "}
+                        {moment(event.endTime).format("hh:mm A") || "TBA"}
                       </p>
-                    </div>
+                    </p>
+                  </div>
 
-                    <div className="flex gap-2 items-center mt-2 text-gray-600">
-                      <i className="pi pi-ticket"></i>
-                      <p>
-                        {event.ticketCategory === "free" ? (
-                          <span className=" px-2 py-1 text-xs text-white bg-green-500 rounded">
-                            Free
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 text-xs text-white bg-blue-500 rounded">
-                            Paid | {event.ticketPrice} $
-                          </span>
-                        )}
-                        <span>
-                          {" "}
-                          |{" "}
-                          <span
-                            className={`px-2 py-1 text-xs text-white ${getTicketColor(
-                              event.ticketsAvailable
-                            )} rounded`}
-                          >
-                            {" "}
-                            {event.ticketsAvailable} tickets left
-                          </span>
+                  <div className="flex gap-2 items-center mt-2 text-gray-600">
+                    <i className="pi pi-ticket"></i>
+                    <p>
+                      {event.ticketCategory === "free" ? (
+                        <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">
+                          Free
                         </span>
-                      </p>
-                    </div>
+                      ) : (
+                        <span className="px-2 py-1 text-xs text-white bg-blue-500 rounded">
+                          Paid | {event.ticketPrice} $
+                        </span>
+                      )}
+                      <span>
+                        {" "}
+                        |{" "}
+                        <span
+                          className={`px-2 py-1 text-xs text-white ${getTicketColor(
+                            event.ticketsAvailable
+                          )} rounded`}
+                        >
+                          {event.ticketsAvailable} tickets left
+                        </span>
+                      </span>
+                    </p>
                   </div>
                 </div>
               </div>

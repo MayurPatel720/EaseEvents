@@ -25,17 +25,30 @@ const FetchEvent = async () => {
   const response = await axios.get(`${api}/event/all`);
   return response.data;
 };
+
+const fetchVolunteer = async (eventID: string) => {
+  const response = await axios.get(`${api}/volunteer/${eventID}`);
+  return response.data;
+};
+
 const FetchMyEvent = async (userid: string) => {
   const response = await axios.post(`${api}/event/myevents`, { userid });
   return response.data;
 };
+
 const fetchEventById = async (eventId: string) => {
   const response = await axios.get(`${api}/event/${eventId}`);
   return response.data;
 };
+
 const fetchParticipantsByEventId = async (eventId: string) => {
   const response = await axios.get(`${api}/event/${eventId}/participants`);
   return response.data;
+};
+
+const CreateVolunteer = async (volunteerdata: any) => {
+  const res = await axios.post(`${api}/volunteer/register`, volunteerdata);
+  return res.data;
 };
 
 export const useCreateEvent = () => {
@@ -43,6 +56,13 @@ export const useCreateEvent = () => {
     mutationFn: createEvent,
   });
 };
+
+export const useCreateVolunteer = () => {
+  return useMutation({
+    mutationFn: CreateVolunteer,
+  });
+};
+
 export const useEditParticipant = () => {
   return useMutation({
     mutationFn: EditParticipant,
@@ -72,8 +92,17 @@ export const useFetchEventByID = (eventId: string) =>
     queryFn: () => fetchEventById(eventId),
   });
 
+export const useFetchVolunteerByEventID = (eventId: string) =>
+  useQuery({
+    queryKey: ["vol", eventId],
+    queryFn: () => fetchVolunteer(eventId),
+  });
+
 export const useFetchParticipantsByEventId = (eventId: string) =>
   useQuery({
     queryKey: ["participants", eventId],
     queryFn: () => fetchParticipantsByEventId(eventId),
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: true,
   });

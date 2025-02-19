@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { api, useFetchEventByID } from "../Queries/Allquery";
+import {
+  api,
+  useCreateVolunteer,
+  useFetchEventByID,
+} from "../Queries/Allquery";
+import { Toast } from "primereact/toast";
 
 const EventParticipationForm: React.FC = () => {
   const { eventId }: any = useParams<{ eventId: string }>();
@@ -12,12 +17,16 @@ const EventParticipationForm: React.FC = () => {
     error,
     isLoading: fetchingEvent,
   } = useFetchEventByID(eventId);
-
+  const { mutate: CreateVolunteer, error: volunteererror } =
+    useCreateVolunteer();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [usertype, setusertype] = useState("participant");
+  const [role, setrole] = useState("");
   const [phone, setPhone] = useState("");
   const amount = 500;
   const [isLoading, setIsLoading] = useState(false);
+  const toast = useRef<Toast>(null);
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -41,6 +50,35 @@ const EventParticipationForm: React.FC = () => {
 
     loadRazorpayScript();
   }, []);
+  const showToast = (
+    severity: "success" | "error",
+    summary: string,
+    detail: string
+  ) => {
+    toast.current?.show({ severity, summary, detail, life: 3000 });
+  };
+  const addVolunteer = async () => {
+    if (!name || !email || !phone) {
+      alert("Please fill in all the fields.");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+    setIsLoading(true);
+    const volunteerdata = { name, email, phone, eventId, role };
+    try {
+      await CreateVolunteer(volunteerdata);
+      showToast("success", "Success", "Successfully joined event as volunteer");
+    } catch (error) {
+      console.error(volunteererror, error);
+      showToast("error", "Error", "Failed to register as volunteer");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleFreeRegistration = async () => {
     if (!name || !email || !phone) {
@@ -153,10 +191,37 @@ const EventParticipationForm: React.FC = () => {
 
   return (
     <div className="max-w-md mx-auto p-6 border rounded-md shadow-md bg-white">
+      <Toast ref={toast} />
+
       <h2 className="text-2xl font-bold mb-4 text-center">
         Participate in Event {event.title}
       </h2>
       <p className="text-black">Tickets available : {event.ticketsAvailable}</p>
+      <div className="mt-4">
+        <label className="font-medium">Register as:</label>
+        <div className="flex gap-4 mt-2">
+          <button
+            onClick={() => setusertype("participant")}
+            className={`px-4 py-2 rounded-lg ${
+              usertype === "participant"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200"
+            }`}
+          >
+            Participant
+          </button>
+          <button
+            onClick={() => setusertype("volunteer")}
+            className={`px-4 py-2 rounded-lg ${
+              usertype === "volunteer"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200"
+            }`}
+          >
+            Volunteer
+          </button>
+        </div>
+      </div>
       <form className="mt-4 space-y-4">
         <input
           type="text"
@@ -182,32 +247,68 @@ const EventParticipationForm: React.FC = () => {
           className="w-full p-2 border rounded-md"
           required
         />
-        {event.ticketCategory === "free" ? (
-          <button
-            type="button"
-            onClick={handleFreeRegistration}
-            className={`w-full py-2 text-white rounded-md ${
-              isLoading
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600"
-            }`}
-            disabled={isLoading}
-          >
-            {isLoading ? "Processing..." : `Register`}
-          </button>
+        {usertype === "volunteer" && (
+          <>
+            <select
+              value={role}
+              onChange={(e) => setrole(e.target.value)}
+              className="w-full p-2 border rounded-md"
+            >
+              <option value="registration">registration</option>
+              <option value="setup">setup</option>
+              <option value="coordinator">coordinator</option>
+              <option value="usher">usher</option>
+              <option value="technical">technical</option>
+              <option value="security">security</option>
+              <option value="general">general</option>
+            </select>
+          </>
+        )}
+        {usertype == "volunteer" ? (
+          <>
+            <button
+              type="button"
+              onClick={addVolunteer}
+              className={`w-full py-2 text-white rounded-md ${
+                isLoading
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-600"
+              }`}
+              disabled={isLoading}
+            >
+              {isLoading ? "Processing..." : `Register as Volunteer`}
+            </button>{" "}
+          </>
         ) : (
-          <button
-            type="button"
-            onClick={handlePayment}
-            className={`w-full py-2 text-white rounded-md ${
-              isLoading
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600"
-            }`}
-            disabled={isLoading}
-          >
-            {isLoading ? "Processing..." : `Pay ₹${amount} & Register`}
-          </button>
+          <>
+            {event.ticketCategory === "free" ? (
+              <button
+                type="button"
+                onClick={handleFreeRegistration}
+                className={`w-full py-2 text-white rounded-md ${
+                  isLoading
+                    ? "bg-gray-500 cursor-not-allowed"
+                    : "bg-blue-500 hover:bg-blue-600"
+                }`}
+                disabled={isLoading}
+              >
+                {isLoading ? "Processing..." : `Register`}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handlePayment}
+                className={`w-full py-2 text-white rounded-md ${
+                  isLoading
+                    ? "bg-gray-500 cursor-not-allowed"
+                    : "bg-blue-500 hover:bg-blue-600"
+                }`}
+                disabled={isLoading}
+              >
+                {isLoading ? "Processing..." : `Pay ₹${amount} & Register`}
+              </button>
+            )}
+          </>
         )}
       </form>
     </div>

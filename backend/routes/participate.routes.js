@@ -59,7 +59,6 @@ router.post("/delete", async function (req, res) {
       message: `${deletedParticipants.length} participants deleted successfully`,
     });
   } catch (error) {
-    console.error("Error deleting participants:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });

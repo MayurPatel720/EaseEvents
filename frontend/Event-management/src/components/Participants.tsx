@@ -35,6 +35,7 @@ const Participants = () => {
     data: event,
     isLoading,
     error,
+    refetch,
   } = useFetchParticipantsByEventId(eventId);
   const { mutate: EditParticipant } = useEditParticipant();
   const { mutate: DeleteParticipant } = useDeleteParticipant();
@@ -68,6 +69,7 @@ const Participants = () => {
           { userids: [participant._id] },
           {
             onSuccess: () => {
+              refetch();
               queryClient.invalidateQueries({
                 queryKey: ["participants", eventId ?? ""],
               });
@@ -137,7 +139,6 @@ const Participants = () => {
       header: "Delete Confirmation",
       icon: "pi pi-exclamation-triangle",
       accept: async () => {
-        console.log(selectedParticipants);
         DeleteParticipant(
           { userids: selectedParticipants },
           {
@@ -155,14 +156,6 @@ const Participants = () => {
             },
           }
         );
-
-        setSelectedParticipants([]);
-        toast.current?.show({
-          severity: "success",
-          summary: "Success",
-          detail: "Selected participants deleted successfully",
-          life: 3000,
-        });
       },
     });
   };
@@ -221,17 +214,17 @@ const Participants = () => {
 
   return (
     <EventLayout>
-      <div className="container mx-auto p-4">
+      <div className="container min-h-screen rounded-xl  p-4">
         <Toast ref={toast} />
         <ConfirmDialog />
 
         <Dialog
           header="Edit Participant"
           visible={visible}
-          style={{ width: "50vw" }}
+          className="w-full sm:w-[90vw] md:w-[70vw] lg:w-[50vw]" // Responsive width
           onHide={() => setVisible(false)}
           footer={
-            <div>
+            <div className="flex flex-wrap justify-end gap-2">
               <Button
                 label="Cancel"
                 onClick={() => setVisible(false)}
@@ -245,51 +238,47 @@ const Participants = () => {
             </div>
           }
         >
-          <div className="p-fluid">
+          <div className="p-fluid space-y-2">
             <InputText
               name="name"
               value={editParticipant?.name || ""}
               onChange={handleInputChange}
+              placeholder="Name"
             />
             <InputText
               name="email"
               value={editParticipant?.email || ""}
               onChange={handleInputChange}
+              placeholder="Email"
             />
             <InputText
               name="phone"
               value={editParticipant?.phone || ""}
               onChange={handleInputChange}
+              placeholder="Phone"
             />
           </div>
         </Dialog>
 
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl pl-3">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="text-xl md:text-2xl pl-3">
             Participants of {event?.title || "Event"}
           </h2>
 
           <Toolbar
             right={() => (
-              <div className="flex space-x-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={exportCSV}
                   className="p-button-info text-white bg-purple-500 hover:bg-purple-700 active:bg-purple-400 px-3 py-2 rounded"
                 >
-                  <i
-                    className="pi pi-upload"
-                    style={{
-                      color: "white",
-                      fontWeight: "bold",
-                      marginRight: "6px",
-                    }}
-                  ></i>
+                  <i className="pi pi-upload mr-2 text-white"></i>
                   Export
                 </button>
                 <Button
                   label="Delete Selected"
                   icon="pi pi-trash"
-                  className="p-button-danger  bg-red-400 px-3 py-2 rounded"
+                  className="p-button-danger bg-red-400 px-3 py-2 rounded"
                   onClick={handleDeleteSelected}
                   disabled={!selectedParticipants.length}
                 />
@@ -298,7 +287,7 @@ const Participants = () => {
           />
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-auto">
           <DataTable
             ref={dt}
             value={participants}
@@ -313,16 +302,19 @@ const Participants = () => {
             header={header}
             responsiveLayout="scroll"
           >
-            <Column selectionMode="multiple" exportable={false}></Column>
-            <Column field="name" header="Name" sortable></Column>
-            <Column field="email" header="Email" sortable></Column>
-            <Column field="phone" header="Phone" sortable></Column>
+            <Column selectionMode="multiple" exportable={false} />
             <Column
-              field="paymentStatus"
-              header="Payment Status"
+              field="name"
+              header="Name"
               sortable
-            ></Column>
-            <Column body={actionBodyTemplate} header="Actions"></Column>
+              body={(rowData, options) =>
+                `${options.rowIndex + 1}. ${rowData.name}`
+              }
+            />
+            <Column field="email" header="Email" sortable />
+            <Column field="phone" header="Phone" sortable />
+            <Column field="paymentStatus" header="Payment Status" sortable />
+            <Column body={actionBodyTemplate} header="Actions" />
           </DataTable>
         </div>
       </div>

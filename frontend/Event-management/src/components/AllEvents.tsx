@@ -17,6 +17,7 @@ import {
 import { useCreateEvent, useFetchMyEvent } from "../Queries/Allquery";
 import { useNavigate } from "react-router";
 import { useSelector } from "react-redux";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AllEvents: React.FC = () => {
   const user = useSelector((store: any) => store.auth.user);
@@ -33,7 +34,7 @@ const AllEvents: React.FC = () => {
 
   const [Date, setDate] = useState<Nullable<Date>>(null);
   const [selectedCategory, setSelectedCategory] = useState("free");
-
+  const queryClient = useQueryClient();
   const handleCategoryChange = (event: {
     target: { value: React.SetStateAction<string> };
   }) => {
@@ -80,6 +81,7 @@ const AllEvents: React.FC = () => {
     setLoading(true);
     createEvent(formdata, {
       onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["myevents"] });
         setLoading(false);
         setVisible(false);
         console.log("Event creation successful!");
@@ -96,7 +98,6 @@ const AllEvents: React.FC = () => {
   return (
     <MyLayout>
       {isError && <p>error : {error.message}</p>}
-
       <Sidebar visible={visible} onHide={() => setVisible(false)} fullScreen>
         <div className="pl-10">
           <h2 className="text-2xl mb-10">Create Event</h2>
@@ -248,6 +249,12 @@ const AllEvents: React.FC = () => {
                 <ProgressSpinner />
               </div>
             )}
+            {events && events.length === 0 && (
+              <div>
+                <p>No event is Created Yet.</p>
+              </div>
+            )}
+
             {events?.map((event: any) => (
               <div
                 key={event._id}

@@ -11,6 +11,7 @@ import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 
 import { Toast } from "primereact/toast";
+import moment from "moment";
 
 interface RouteParams {
   eventId?: string;
@@ -175,13 +176,14 @@ const EventDetails: React.FC = () => {
                       <div className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors">
                         <p className="font-semibold text-gray-700 mb-2">Date</p>
                         <p className="text-gray-600">
-                          {new Date(event.date).toLocaleDateString()}
+                          {moment(event.date).format("DD-MM-y")}
                         </p>
                       </div>
                       <div className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors">
                         <p className="font-semibold text-gray-700 mb-2">Time</p>
                         <p className="text-gray-600">
-                          {event.startTime} - {event.endTime}
+                          {moment(event.startTime).format("hh:mm A")} -{" "}
+                          {moment(event.endTime).format("hh:mm A") || "TBA"}{" "}
                         </p>
                       </div>
                     </div>

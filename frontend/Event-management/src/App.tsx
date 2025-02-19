@@ -13,11 +13,12 @@ import AllEvents from "./components/AllEvents";
 import EventParticipationForm from "./components/EventParticipationForm";
 import EventDetails from "./components/EventDetails";
 import Participants from "./components/Participants";
-import Volunteers from "./components/Volunteers";
+// import IndividualVolunteer from "./components/IndividualVolunteer";
 import Analytics from "./components/Analytics";
 import Promotions from "./components/Promotions";
 import QA from "./components/QA";
 import { api } from "./Queries/Allquery";
+import AllVolunteers from "./components/AllVolunteers";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -85,7 +86,7 @@ const App = () => {
                 />
                 <Route
                   path="/events/:eventId/volunteers"
-                  element={<Volunteers />}
+                  element={<AllVolunteers />}
                 />
                 <Route
                   path="/events/:eventId/analytics"

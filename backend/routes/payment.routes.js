@@ -47,7 +47,11 @@ router.post("/create-order", async (req, res) => {
       receipt: `receipt_${Date.now()}`,
     };
     const order = await razorpay.orders.create(options);
-
+    if (event.ticketCategory == "free") {
+      paymentStatus = "paid";
+    } else {
+      paymentStatus = "pending";
+    }
     const participant = await Participant.create({
       name,
       email,
@@ -55,16 +59,15 @@ router.post("/create-order", async (req, res) => {
       eventId,
       ticketNumber,
       razorpayOrderId: order.id,
-      paymentStatus: "pending", // Mark as pending until verified
+      paymentStatus,
     });
 
     event.participants.push(participant._id);
-    await event.save(); // Don't reduce tickets here
+
+    await event.save();
 
     res.json(order);
-    console.log("New Participant:", participant);
   } catch (error) {
-    console.error("Error creating order:", error);
     res.status(500).json({ error: error.message });
   }
 });

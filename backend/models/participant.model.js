@@ -52,14 +52,18 @@ ParticipantSchema.pre("save", async function (next) {
     if (!this.qrCode) {
       this.qrCode = await qr.toDataURL(this.ticketNumber);
     }
-    
+
     const event = await Event.findById(this.eventId);
     await sendTicketEmail(
       this.email,
       this.name,
       event.title,
       this.ticketNumber,
-      this.qrCodePath
+      this.qrCodePath,
+      event.date,
+      event.venue,
+      event.startTime,
+      event.endTime
     );
   }
   next();

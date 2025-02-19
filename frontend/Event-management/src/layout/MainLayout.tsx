@@ -24,7 +24,6 @@ const MyLayout: React.FC<MyLayoutProps> = ({ children }) => {
 
         <main className="my-layout-main flex-1">{children}</main>
       </div>
-
       <Footer />
     </div>
   );

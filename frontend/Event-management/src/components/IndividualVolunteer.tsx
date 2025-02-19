@@ -11,7 +11,7 @@ import "primeicons/primeicons.css";
 import { ReactElement, JSXElementConstructor, ReactNode } from "react";
 import EventLayout from "../layout/EventLayout";
 
-const VolunteerDashboard = () => {
+const IndividualVolunteer = () => {
   // Sample data
   const upcomingEvents = [
     {
@@ -156,4 +156,4 @@ const VolunteerDashboard = () => {
   );
 };
 
-export default VolunteerDashboard;
+export default IndividualVolunteer;

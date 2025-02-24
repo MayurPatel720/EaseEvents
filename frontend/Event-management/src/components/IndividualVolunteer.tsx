@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Avatar } from "primereact/avatar";
 import { Card } from "primereact/card";
 import { Column } from "primereact/column";
@@ -98,7 +97,9 @@ const IndividualVolunteer = () => {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [storedUser]);
 
-  const { data: upcomingEvents } = useGetvolunteerDetails(storedUser?._id);
+  const { data: upcomingEvents } = useGetvolunteerDetails(
+    storedUser?._id ?? ""
+  );
 
   const eventsData: EventData[] = Array.isArray(upcomingEvents)
     ? upcomingEvents

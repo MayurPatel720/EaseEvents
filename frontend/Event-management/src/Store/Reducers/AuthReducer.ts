@@ -18,7 +18,9 @@ const initialState: AuthState = {
   token: localStorage.getItem("token"),
   isAuthenticated: !!localStorage.getItem("token"),
   loading: false,
-  user: null,
+  user: localStorage.getItem("user")
+    ? JSON.parse(localStorage.getItem("user")!)
+    : null,
   error: null,
 };
 
@@ -39,6 +41,7 @@ const authSlice = createSlice({
       state.token = action.payload.token;
       state.user = action.payload.user;
       localStorage.setItem("token", action.payload.token);
+      localStorage.setItem("user", JSON.stringify(action.payload.user));
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.loading = false;
@@ -47,17 +50,20 @@ const authSlice = createSlice({
       state.token = null;
       state.user = null;
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
     },
     logout: (state) => {
       state.token = null;
       state.isAuthenticated = false;
       state.user = null;
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
     },
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
       state.isAuthenticated = true;
       state.loading = false;
+      localStorage.setItem("user", JSON.stringify(action.payload));
     },
   },
 });

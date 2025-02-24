@@ -1,33 +1,118 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Card } from "primereact/card";
-import { TabView, TabPanel } from "primereact/tabview";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
-import { Tag } from "primereact/tag";
 import { Avatar } from "primereact/avatar";
-import "primereact/resources/themes/lara-light-indigo/theme.css";
-import "primereact/resources/primereact.min.css";
-import "primeicons/primeicons.css";
-import { ReactElement, JSXElementConstructor, ReactNode } from "react";
-import EventLayout from "../layout/EventLayout";
+import { Card } from "primereact/card";
+import { Column } from "primereact/column";
+import { DataTable } from "primereact/datatable";
+import { TabPanel, TabView } from "primereact/tabview";
+import { Tag } from "primereact/tag";
+import "../css/indi.css";
+import { useEffect, useState } from "react";
+import { useGetvolunteerDetails } from "../Queries/Allquery";
+
+interface Events {
+  event: string;
+  role: string;
+  assignedTasks: string;
+  _id: string;
+  date: string;
+}
+
+interface EventData {
+  email: string;
+  events: Events[];
+  name: string;
+  phone: string;
+  totalEventsParticipated: number;
+  _id: string;
+}
 
 const IndividualVolunteer = () => {
-  // Sample data
-  const upcomingEvents = [
-    {
-      id: 1,
-      name: "Tech Conference 2025",
-      date: "2025-03-15",
-      role: "Registration Desk",
-    },
-    {
-      id: 2,
-      name: "Community Meetup",
-      date: "2025-03-20",
-      role: "Event Setup",
-    },
-  ];
+  const [storedUser, setStoredUser] = useState<EventData | null>(null);
+  const [storageStatus, setStorageStatus] = useState<string>(
+    "Checking storage..."
+  );
 
+  const getUserData = (): EventData | null => {
+    try {
+      const userData = localStorage.getItem("user");
+      if (!userData) {
+        setStorageStatus("No user data found in localStorage");
+        return null;
+      }
+
+      const parsedData = JSON.parse(userData);
+      return parsedData.user || parsedData;
+    } catch (error) {
+      console.error("Error parsing user data from localStorage:", error);
+      setStorageStatus(
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const checkStorage = () => {
+      try {
+        localStorage.setItem("storage_test", "test");
+        if (localStorage.getItem("storage_test") === "test") {
+          localStorage.removeItem("storage_test");
+          setStorageStatus("LocalStorage is available");
+        } else {
+          setStorageStatus(
+            "LocalStorage is available but not working correctly"
+          );
+        }
+      } catch (e) {
+        setStorageStatus(
+          `LocalStorage error: ${
+            e instanceof Error ? e.message : "Unknown error"
+          }`
+        );
+        console.error("LocalStorage not available:", e);
+      }
+    };
+
+    checkStorage();
+  }, []);
+
+  useEffect(() => {
+    const userData = getUserData();
+    if (userData) {
+      setStoredUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
+      setStorageStatus("User data loaded successfully");
+    } else {
+      setStorageStatus("No user data found");
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (storedUser) {
+        localStorage.setItem("user", JSON.stringify(storedUser));
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [storedUser]);
+
+  const { data: upcomingEvents } = useGetvolunteerDetails(storedUser?._id);
+
+  const eventsData: EventData[] = Array.isArray(upcomingEvents)
+    ? upcomingEvents
+    : upcomingEvents
+    ? [upcomingEvents]
+    : [];
+
+  console.log(eventsData);
+  const flattenedEventsData = storedUser?.events.map((event) => ({
+    name: storedUser?.name,
+    email: storedUser?.email,
+    phone: storedUser?.phone,
+    ...event, // Spread the event details into the row
+  }));
   const tasks = [
     {
       id: 1,
@@ -43,116 +128,205 @@ const IndividualVolunteer = () => {
     },
   ];
 
-  const statusTemplate = (rowData: {
-    status:
-      | string
-      | number
-      | boolean
-      | ReactElement<any, string | JSXElementConstructor<any>>
-      | Iterable<ReactNode>
-      | null
-      | undefined;
-  }): any => {
+  const statusTemplate = (rowData: { status: string }) => {
     const severity = rowData.status === "completed" ? "success" : "warning";
-    return <Tag value={rowData.status} severity={severity} />;
+    return (
+      <Tag
+        value={rowData.status}
+        severity={severity}
+        className="px-3 py-1 text-sm rounded-lg"
+      />
+    );
+  };
+
+  const recoverSession = () => {
+    try {
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        setStoredUser(parsedData.user || parsedData);
+        setStorageStatus("Session recovered");
+      } else {
+        setStorageStatus("No recovery data available");
+      }
+    } catch (e) {
+      setStorageStatus(
+        `Recovery error: ${e instanceof Error ? e.message : "Unknown error"}`
+      );
+    }
+  };
+
+  if (!storedUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
+        <Card className="p-6 bg-gray-800 bg-opacity-50 border border-gray-700 w-96">
+          <div className="text-white text-center">
+            <i className="pi pi-exclamation-triangle text-3xl mb-4 text-yellow-400"></i>
+            <h2 className="text-xl mb-4">Dashboard Access Issue</h2>
+            <p className="mb-4">Status: {storageStatus}</p>
+            <div className="flex space-x-4 justify-center">
+              <button
+                onClick={recoverSession}
+                className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Recover Session
+              </button>
+              <button
+                onClick={() => (window.location.href = "/VolLogin")}
+                className="px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Return to Login
+              </button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+  const formatDate = (dateString: string) => {
+    try {
+      const datePart = dateString.split(" Off:")[0];
+      const eventDate = new Date(datePart);
+      return eventDate.toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Invalid date";
+    }
   };
 
   return (
-    <EventLayout>
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
-              <Card>
-                <div className="flex items-center space-x-4 mb-4">
-                  <Avatar icon="pi pi-user" size="large" shape="circle" />
-                  <div>
-                    <h3 className="font-medium">John Doe</h3>
-                    <p className="text-sm text-gray-500">
-                      Volunteer since Jan 2025
-                    </p>
-                  </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1">
+            <Card className="shadow-lg rounded-xl p-6 bg-gray-800 bg-opacity-50 border border-gray-700 hover:border-gray-600 transition-all duration-300">
+              <div className="flex items-center space-x-4 mb-6">
+                <Avatar
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-5 shadow-md"
+                  icon="pi pi-user"
+                  size="xlarge"
+                  shape="circle"
+                />
+                <div>
+                  <h3 className="font-semibold text-lg text-white">
+                    {storedUser.name}
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    Volunteer since Jan 2025
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-100 p-3 rounded-lg text-center">
-                    <p className="text-xl font-bold">5</p>
-                    <p className="text-sm text-gray-500">Events</p>
-                  </div>
-                  <div className="bg-gray-100 p-3 rounded-lg text-center">
-                    <p className="text-xl font-bold">24h</p>
-                    <p className="text-sm text-gray-500">Hours</p>
-                  </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-700 bg-opacity-50 p-4 rounded-xl text-center border border-gray-600 hover:border-gray-500 transition-all duration-300">
+                  <p className="text-2xl font-bold text-blue-400">
+                    {storedUser.totalEventsParticipated}
+                  </p>
+                  <p className="text-sm text-gray-400">Events</p>
                 </div>
-              </Card>
-            </div>
+                <div className="bg-gray-700 bg-opacity-50 p-4 rounded-xl text-center border border-gray-600 hover:border-gray-500 transition-all duration-300">
+                  <p className="text-2xl font-bold text-purple-400">24h</p>
+                  <p className="text-sm text-gray-400">Hours</p>
+                </div>
+              </div>
+            </Card>
+          </div>
 
-            {/* Main Content */}
-            <div className="lg:col-span-2">
-              <TabView>
-                <TabPanel header="Dashboard">
-                  <Card className="mb-4">
-                    <div className="card-title mb-4">
-                      <h2 className="text-xl font-bold flex items-center">
-                        <i className="pi pi-calendar mr-2"></i>
-                        Upcoming Events
-                      </h2>
-                    </div>
-                    <DataTable value={upcomingEvents} responsiveLayout="scroll">
-                      <Column field="name" header="Event Name"></Column>
-                      <Column field="date" header="Date"></Column>
-                      <Column field="role" header="Role"></Column>
-                    </DataTable>
-                  </Card>
+          <div className="lg:col-span-2">
+            <TabView className="bg-gray-800 bg-opacity-50 shadow-lg rounded-xl overflow-hidden border border-gray-700">
+              <TabPanel header="Dashboard">
+                <Card className="mb-6 p-6 bg-gray-700 bg-opacity-50 shadow-md rounded-lg border border-gray-600 hover:border-gray-500 transition-all duration-300">
+                  <h2 className="text-xl font-semibold flex items-center mb-4 text-white">
+                    <i className="pi pi-calendar text-blue-400 mr-2"></i>
+                    Upcoming Events
+                  </h2>
+                  <DataTable
+                    value={flattenedEventsData}
+                    className="p-datatable-striped p-datatable-gridlines bg-gray-700 rounded-lg overflow-hidden border border-gray-600"
+                  >
+                    <Column
+                      field="date"
+                      header="Date"
+                      headerClassName="center-header"
+                      className="w-52 text-center"
+                      body={(rowData) => {
+                        if (!rowData.date)
+                          return <span>No date available</span>;
+                        return (
+                          <span className="text-white ">
+                            {formatDate(rowData.date)}
+                          </span>
+                        );
+                      }}
+                    />
 
-                  <Card>
-                    <div className="card-title mb-4">
-                      <h2 className="text-xl font-bold flex items-center">
-                        <i className="pi pi-check-square mr-2"></i>
-                        Today's Tasks
-                      </h2>
-                    </div>
-                    <DataTable value={tasks} responsiveLayout="scroll">
-                      <Column field="task" header="Task"></Column>
-                      <Column field="time" header="Time"></Column>
-                      <Column
-                        field="status"
-                        header="Status"
-                        body={statusTemplate}
-                      ></Column>
-                    </DataTable>
-                  </Card>
-                </TabPanel>
+                    <Column
+                      field="eventname"
+                      headerClassName="center-header"
+                      header="Event Name"
+                      className="text-white text-center"
+                    />
+                    <Column
+                      field="role"
+                      headerClassName="center-header"
+                      header="Role"
+                      className="text-white text-center"
+                    />
+                  </DataTable>
+                </Card>
 
-                <TabPanel header="Events">
-                  <Card>
-                    <p className="text-center text-gray-500">
-                      Events content will go here
-                    </p>
-                  </Card>
-                </TabPanel>
+                <Card className="p-6 bg-gray-700 bg-opacity-50 shadow-md rounded-lg border border-gray-600 hover:border-gray-500 transition-all duration-300">
+                  <h2 className="text-xl font-semibold flex items-center mb-4 text-white">
+                    <i className="pi pi-check-square text-green-400 mr-2"></i>
+                    Today's Tasks
+                  </h2>
+                  <DataTable
+                    value={tasks}
+                    className="p-datatable-striped p-datatable-gridlines bg-gray-700 rounded-lg overflow-hidden border border-gray-600"
+                  >
+                    <Column field="task" header="Task" className="text-white" />
+                    <Column field="time" header="Time" className="text-white" />
+                    <Column
+                      field="status"
+                      header="Status"
+                      body={statusTemplate}
+                      className="text-white"
+                    />
+                  </DataTable>
+                </Card>
+              </TabPanel>
 
-                <TabPanel header="Tasks">
-                  <Card>
-                    <p className="text-center text-gray-500">
-                      Tasks content will go here
-                    </p>
-                  </Card>
-                </TabPanel>
+              <TabPanel header="Events">
+                <Card className="p-6 bg-gray-700 bg-opacity-50 border border-gray-600 hover:border-gray-500 transition-all duration-300">
+                  <p className="text-center text-gray-400">
+                    Events content will go here
+                  </p>
+                </Card>
+              </TabPanel>
 
-                <TabPanel header="Messages">
-                  <Card>
-                    <p className="text-center text-gray-500">
-                      Messages content will go here
-                    </p>
-                  </Card>
-                </TabPanel>
-              </TabView>
-            </div>
+              <TabPanel header="Tasks">
+                <Card className="p-6 bg-gray-700 bg-opacity-50 border border-gray-600 hover:border-gray-500 transition-all duration-300">
+                  <p className="text-center text-gray-400">
+                    Tasks content will go here
+                  </p>
+                </Card>
+              </TabPanel>
+
+              <TabPanel header="Messages">
+                <Card className="p-6 bg-gray-700 bg-opacity-50 border border-gray-600 hover:border-gray-500 transition-all duration-300">
+                  <p className="text-center text-gray-400">
+                    Messages content will go here
+                  </p>
+                </Card>
+              </TabPanel>
+            </TabView>
           </div>
         </div>
       </div>
-    </EventLayout>
+    </div>
   );
 };
 

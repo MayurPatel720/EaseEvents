@@ -26,6 +26,9 @@ const VolunteerSchema = new Schema(
           required: true,
           index: true,
         },
+        eventname: {
+          type: String,
+        },
         role: {
           type: String,
           required: true,
@@ -38,6 +41,9 @@ const VolunteerSchema = new Schema(
             "security",
             "general",
           ],
+        },
+        date: {
+          type: String,
         },
         // Keep the original field name but change the type
         assignedTasks: {

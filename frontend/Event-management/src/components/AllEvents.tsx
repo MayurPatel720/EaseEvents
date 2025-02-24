@@ -51,7 +51,6 @@ const AllEvents: React.FC = () => {
     }
   };
 
-  // const { data: events, isLoading, isError, error } = useGetallEvents();
   const {
     data: events,
     isLoading,

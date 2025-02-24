@@ -17,8 +17,7 @@ const EventParticipationForm: React.FC = () => {
     error,
     isLoading: fetchingEvent,
   } = useFetchEventByID(eventId);
-  const { mutate: CreateVolunteer, error: volunteererror } =
-    useCreateVolunteer();
+  const { mutate: CreateVolunteer } = useCreateVolunteer();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [usertype, setusertype] = useState("participant");
@@ -55,26 +54,47 @@ const EventParticipationForm: React.FC = () => {
     summary: string,
     detail: string
   ) => {
-    toast.current?.show({ severity, summary, detail, life: 3000 });
+    if (toast.current) {
+      toast.current.show({
+        severity,
+        summary,
+        detail,
+        life: 3000,
+        // Ensure visibility
+        style: {
+          zIndex: 9999,
+        },
+      });
+    } else {
+      console.warn("Toast reference is not available");
+    }
   };
   const addVolunteer = async () => {
     if (!name || !email || !phone) {
-      alert("Please fill in all the fields.");
+      showToast("error", "Form Error", "Please fill in all the fields.");
       return;
     }
 
     if (!isValidEmail(email)) {
-      alert("Please enter a valid email address.");
+      showToast(
+        "error",
+        "Validation Error",
+        "Please enter a valid email address."
+      );
       return;
     }
+
     setIsLoading(true);
     const volunteerdata = { name, email, phone, eventId, role };
+
     try {
       await CreateVolunteer(volunteerdata);
       showToast("success", "Success", "Successfully joined event as volunteer");
-    } catch (error) {
-      console.error(volunteererror, error);
-      showToast("error", "Error", "Failed to register as volunteer");
+    } catch (error: any) {
+      // Get the message from the enhanced error or use a default
+      const errorMsg = error.message || "Failed to register as volunteer";
+      showToast("error", "Registration Failed", errorMsg);
+      console.error("Volunteer Registration Error:", error);
     } finally {
       setIsLoading(false);
     }

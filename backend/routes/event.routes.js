@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const Event = require("../models/event.model");
 
-// Existing routes
 router.get("/all", async function (req, res) {
   try {
     const events = await Event.find();
@@ -108,7 +107,8 @@ router.post("/myevents", async (req, res) => {
     res.status(500).json({ error: "Server error", details: error.message });
   }
 });
-router.put("/edit/:eventId", async (req, res) => {
+
+router.post("/edit/:eventId", async (req, res) => {
   const eventId = req.params.eventId;
   try {
     console.log(`Received request to edit event: ${eventId}`);
@@ -131,7 +131,7 @@ router.put("/edit/:eventId", async (req, res) => {
       ticketsAvailable,
     } = req.body;
 
-    console.log("Request Body:", req.body); // Log received data
+    console.log("Request Body:", req.body);
 
     if (
       !title ||
@@ -175,8 +175,6 @@ router.delete("/delete/:eventID", async (req, res) => {
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
-
-  
 
     // Delete the event
     await Event.findByIdAndDelete(eventId);

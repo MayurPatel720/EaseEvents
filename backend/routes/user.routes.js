@@ -4,6 +4,7 @@ const userSchema = require("../models/user.model.ts");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const Volunteer = require("../models/volunteer.model.js");
 
 router.get("/register", function (req, res) {
   res.send("register");
@@ -93,7 +94,7 @@ router.post("/login", async function (req, res) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 3600000, 
+      maxAge: 3600000,
     });
 
     res.json({
@@ -116,6 +117,45 @@ router.post("/login", async function (req, res) {
 
 router.get("/login", function (req, res) {
   res.send("login");
+});
+
+router.post("/Vollogin", async function (req, res) {
+  try {
+    const { username, password } = req.body;
+    console.log(username);
+
+    const volunte = await Volunteer.findOne({ name: username });
+
+    if (!volunte) {
+      return res.status(404).json({ message: "Volunteer not found" });
+    }
+    const ismatch = await bcrypt.compare(password, volunte.password);
+    if (!ismatch) {
+      return res.status(400).json({
+        message: "Username or password is incorrect",
+      });
+    }
+    const token = jwt.sign(
+      {
+        userID: volunte._id,
+        username: volunte.name,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "2h" }
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 3600000,
+    });
+    res
+      .status(200)
+      .json({ message: "Login successful", token, volunteer: volunte });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 });
 
 module.exports = router;

@@ -1,11 +1,15 @@
-/* eslint-disable react-refresh/only-export-components */
 import { configureStore } from "@reduxjs/toolkit";
-import UserReducer from "./Reducers/UserReducer";
-import AuthReducer from "./Reducers/AuthReducer";
+import userReducer from "./Reducers/UserReducer";
+import authReducer from "./Reducers/AuthReducer";
 
-export default configureStore({
+const store = configureStore({
   reducer: {
-    UserReducer: UserReducer,
-    auth: AuthReducer,
+    user: userReducer,
+    auth: authReducer,
   },
 });
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+export default store;

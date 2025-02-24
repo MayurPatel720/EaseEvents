@@ -19,6 +19,8 @@ import Promotions from "./components/Promotions";
 import QA from "./components/QA";
 import { api } from "./Queries/Allquery";
 import AllVolunteers from "./components/AllVolunteers";
+import VolLogin from "./components/VolLogin";
+import IndividualVolunteer from "./components/IndividualVolunteer";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -66,6 +68,8 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/VolLogin" element={<VolLogin />} />
+        <Route path="/VolDashBoard" element={<IndividualVolunteer />} />
         <Route path="/register" element={<RegisterForm />} />
         <Route
           path="/participate/:eventId"

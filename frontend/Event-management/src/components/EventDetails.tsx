@@ -9,9 +9,9 @@ import { useFetchEventByID } from "../Queries/Allquery";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
-
 import { Toast } from "primereact/toast";
 import moment from "moment";
+import axios from "axios";
 
 interface RouteParams {
   eventId?: string;
@@ -59,17 +59,22 @@ const EventDetails: React.FC = () => {
 
   const handleUpdate = async () => {
     try {
-      const response = await fetch(
+      const response = await axios.post(
         `http://localhost:8000/event/edit/${eventId}`,
         {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          title: editedEvent.title,
+          venue: editedEvent.venue,
+          date: editedEvent.date,
+          startTime: editedEvent.startTime,
+          endTime: editedEvent.endTime,
+          image: editedEvent.image,
+          ticketCategory: editedEvent.ticketCategory,
+          ticketPrice: editedEvent.ticketPrice,
+          ticketsAvailable: editedEvent.ticketsAvailable,
         }
       );
 
-      if (!response.ok) {
+      if (!response) {
         throw new Error("Failed to update event");
       }
 
@@ -226,13 +231,13 @@ const EventDetails: React.FC = () => {
           visible={editDialog}
           onHide={() => setEditDialog(false)}
           header="Edit Event"
-          // className="w-11 md:w-8 lg:w-6"
-          contentClassName="p-6"
+          className="w-2/5"
+          contentClassName="p-6 "
           headerClassName="bg-gray-50 p-4"
         >
           {editedEvent && (
             <div className="grid p-fluid gap-4">
-              {/* ... (keep existing form fields but add these classes to each field container) */}
+              {/* Title Field */}
               <div className="col-12">
                 <label
                   htmlFor="title"
@@ -246,27 +251,171 @@ const EventDetails: React.FC = () => {
                   onChange={(e) =>
                     setEditedEvent({ ...editedEvent, title: e.target.value })
                   }
-                  className="hover:border-blue-400 focus:border-blue-500 transition-colors"
+                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
                 />
               </div>
-              {/* ... (repeat for other form fields) */}
-              <div className="col-12 mt-4">
+
+              {/* Venue Field */}
+              <div className="col-12">
+                <label
+                  htmlFor="venue"
+                  className="block mb-2 font-medium text-gray-700"
+                >
+                  Venue
+                </label>
+                <InputText
+                  id="venue"
+                  value={editedEvent.venue}
+                  onChange={(e) =>
+                    setEditedEvent({ ...editedEvent, venue: e.target.value })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                />
+              </div>
+
+              {/* Date Field */}
+              <div className="col-12">
+                <label
+                  htmlFor="date"
+                  className="block mb-2 font-medium text-gray-700"
+                >
+                  Date
+                </label>
+                <InputText
+                  id="date"
+                  type="date"
+                  value={moment(editedEvent.date).format("YYYY-MM-DD")}
+                  onChange={(e) =>
+                    setEditedEvent({
+                      ...editedEvent,
+                      date: new Date(e.target.value),
+                    })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                />
+              </div>
+
+              {/* Start Time Field */}
+              <div className="col-12">
+                <label
+                  htmlFor="startTime"
+                  className="block mb-2 font-medium text-gray-700"
+                >
+                  Start Time
+                </label>
+                <InputText
+                  id="startTime"
+                  type="time"
+                  value={moment(editedEvent.startTime).format("HH:mm")}
+                  onChange={(e) =>
+                    setEditedEvent({
+                      ...editedEvent,
+                      startTime: e.target.value,
+                    })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                />
+              </div>
+
+              <div className="col-12">
+                <label
+                  htmlFor="endTime"
+                  className="block mb-2 font-medium text-gray-700"
+                >
+                  End Time
+                </label>
+                <InputText
+                  id="endTime"
+                  type="time"
+                  value={moment(editedEvent.endTime).format("HH:mm")}
+                  onChange={(e) =>
+                    setEditedEvent({ ...editedEvent, endTime: e.target.value })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                />
+              </div>
+
+              <div className="col-12">
+                <label
+                  htmlFor="ticketCategory"
+                  className="block mb-2 font-medium text-gray-700"
+                >
+                  Ticket Category
+                </label>
+                <InputText
+                  id="ticketCategory"
+                  value={editedEvent.ticketCategory}
+                  onChange={(e) =>
+                    setEditedEvent({
+                      ...editedEvent,
+                      ticketCategory: e.target.value,
+                    })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                />
+              </div>
+
+              {editedEvent.ticketCategory === "paid" && (
+                <div className="col-12">
+                  <label
+                    htmlFor="ticketPrice"
+                    className="block mb-2 font-medium text-gray-700"
+                  >
+                    Ticket Price
+                  </label>
+                  <InputText
+                    id="ticketPrice"
+                    type="number"
+                    value={editedEvent.ticketPrice}
+                    onChange={(e) =>
+                      setEditedEvent({
+                        ...editedEvent,
+                        ticketPrice: e.target.value,
+                      })
+                    }
+                    className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                  />
+                </div>
+              )}
+
+              {/* Available Tickets Field */}
+              <div className="col-12">
+                <label
+                  htmlFor="ticketsAvailable"
+                  className="block mb-2 font-medium text-gray-700"
+                >
+                  Available Tickets
+                </label>
+                <InputText
+                  id="ticketsAvailable"
+                  type="number"
+                  value={editedEvent.ticketsAvailable}
+                  onChange={(e) =>
+                    setEditedEvent({
+                      ...editedEvent,
+                      ticketsAvailable: e.target.value,
+                    })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                />
+              </div>
+
+              {/* Update Button */}
+              <div className="col-12 mt-6">
                 <Button
                   label="Update Event"
                   onClick={handleUpdate}
-                  className="w-full p-button-primary hover:shadow-md transition-shadow"
+                  className="w-full p-3 bg-blue-500 font-semibold rounded-lg hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all"
                 />
               </div>
             </div>
           )}
         </Dialog>
 
-        {/* Delete Confirmation Dialog - Enhanced Styling */}
         <Dialog
           visible={deleteDialog}
           onHide={() => setDeleteDialog(false)}
           header="Confirm Delete"
-          className="w-96"
           contentClassName="p-6"
           headerClassName="bg-red-50 text-red-700 p-4"
           footer={

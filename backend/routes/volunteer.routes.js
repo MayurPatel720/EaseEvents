@@ -20,7 +20,6 @@ router.post("/register", async (req, res) => {
     if (!eventExists) {
       return res.status(404).json({ message: "Event not found" });
     }
-    console.log(eventExists);
 
     let volunteerProfile = await Volunteer.findOne({ email });
 
@@ -33,7 +32,16 @@ router.post("/register", async (req, res) => {
         email,
         phone,
         password: hashedPassword,
-        events: [{ event: eventId, role }],
+        events: [
+          {
+            event: eventId,
+            role,
+            date: eventExists.date,
+            eventname: eventExists.title,
+            status: "pending",
+            assignedTasks: "",
+          },
+        ],
       });
       await SendPassword(name, email, defaultPassword, eventExists.title);
     } else {
@@ -47,12 +55,22 @@ router.post("/register", async (req, res) => {
         });
       }
 
+      // Make sure we're explicitly setting all fields
       volunteerProfile.events.push({
         event: eventId,
         role,
+        eventname: eventExists.title,
+        date: eventExists.date,
         status: "pending",
+        assignedTasks: "", // Explicitly set as empty string
       });
     }
+
+    // Log right before saving to confirm the structure
+    console.log(
+      "Volunteer profile before save:",
+      JSON.stringify(volunteerProfile, null, 2)
+    );
 
     await volunteerProfile.save();
 
@@ -82,6 +100,24 @@ router.get("/:eventId", async (req, res) => {
   } catch (error) {
     console.error("Error fetching volunteers:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.get("/:VolID/details", async (req, res) => {
+  try {
+    const VolID = req.params.VolID;
+
+    const response = await Volunteer.findById(VolID);
+    if (!response) {
+      return res.status(404).json({ message: "Volunteer not found" });
+    }
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error("Error fetching volunteer:", error);
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 });
 
@@ -134,6 +170,7 @@ router.post("/edittask", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 router.delete("/delete/:volunteerId/:eventId", async (req, res) => {
   try {
     const { volunteerId, eventId } = req.params;

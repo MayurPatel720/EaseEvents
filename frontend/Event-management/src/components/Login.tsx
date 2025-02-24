@@ -212,6 +212,18 @@ const Login = () => {
               Sign up
             </a>
           </p>
+          <center>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/VolLogin");
+              }}
+              className=" text-blue-500  hover:underline"
+            >
+              Login As Volunteer
+            </a>
+          </center>
         </div>
       </div>
     </div>

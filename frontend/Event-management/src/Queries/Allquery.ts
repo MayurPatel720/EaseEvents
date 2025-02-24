@@ -2,9 +2,9 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
-// export const api = "http://localhost:8000";
+export const api = "http://localhost:8000";
 
-export const api = "https://easeevents.onrender.com";
+// export const api = "https://easeevents.onrender.com";
 
 const createEvent = async (formdata: any) => {
   const res = await axios.post(`${api}/event/create_event`, formdata);
@@ -29,6 +29,11 @@ const FetchEvent = async () => {
 
 const fetchVolunteer = async (eventID: string) => {
   const response = await axios.get(`${api}/volunteer/${eventID}`);
+  return response.data;
+};
+
+const fetchVolunteerdetail = async (VolID: string) => {
+  const response = await axios.get(`${api}/volunteer/${VolID}/details`);
   return response.data;
 };
 
@@ -97,6 +102,12 @@ export const useFetchVolunteerByEventID = (eventId: string) =>
   useQuery({
     queryKey: ["vol", eventId],
     queryFn: () => fetchVolunteer(eventId),
+  });
+
+export const useGetvolunteerDetails = (VolID: string) =>
+  useQuery({
+    queryKey: ["vold", VolID],
+    queryFn: () => fetchVolunteerdetail(VolID),
   });
 
 export const useFetchParticipantsByEventId = (eventId: string) =>

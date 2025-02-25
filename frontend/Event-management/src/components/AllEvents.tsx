@@ -244,7 +244,7 @@ const AllEvents: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {isLoading && (
-              <div className="card flex justify-content-center">
+              <div className="card flex items-center justify-center">
                 <ProgressSpinner />
               </div>
             )}

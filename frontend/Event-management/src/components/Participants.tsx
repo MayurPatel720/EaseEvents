@@ -6,6 +6,7 @@ import {
   useEditParticipant,
   useFetchParticipantsByEventId,
 } from "../Queries/Allquery";
+import "../css/parti.css";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Toolbar } from "primereact/toolbar";
 import { DataTable } from "primereact/datatable";
@@ -221,7 +222,7 @@ const Participants = () => {
         <Dialog
           header="Edit Participant"
           visible={visible}
-          className="w-full sm:w-[90vw] md:w-[70vw] lg:w-[50vw]" // Responsive width
+          className="w-full sm:w-[90vw] md:w-[70vw] lg:w-[50vw]"
           onHide={() => setVisible(false)}
           footer={
             <div className="flex flex-wrap justify-end gap-2">

@@ -7,6 +7,7 @@ import { Tag } from "primereact/tag";
 import "../css/indi.css";
 import { useEffect, useState } from "react";
 import { useGetvolunteerDetails } from "../Queries/Allquery";
+import EventCard from "./VolEvents";
 
 interface Events {
   event: string;
@@ -239,47 +240,56 @@ const IndividualVolunteer = () => {
           <div className="lg:col-span-2">
             <TabView className="bg-gray-800 bg-opacity-50 shadow-lg rounded-xl overflow-hidden border border-gray-700">
               <TabPanel header="Dashboard">
-                <Card className="mb-6 p-6 bg-gray-700 bg-opacity-50 shadow-md rounded-lg border border-gray-600 hover:border-gray-500 transition-all duration-300">
-                  <h2 className="text-xl font-semibold flex items-center mb-4 text-white">
+                <Card className="mb-6 bg-gray-700 bg-opacity-50 shadow-md rounded-lg border border-gray-600 hover:border-gray-500 transition-all duration-300 ">
+                  <h2 className="text-xl md:text-xl font-semibold flex items-center mb-4 text-white">
                     <i className="pi pi-calendar text-blue-400 mr-2"></i>
                     Upcoming Events
                   </h2>
-                  <DataTable
-                    value={flattenedEventsData}
-                    className="p-datatable-striped p-datatable-gridlines bg-gray-700 rounded-lg overflow-hidden border border-gray-600"
-                  >
-                    <Column
-                      field="date"
-                      header="Date"
-                      headerClassName="center-header"
-                      className="w-52 text-center"
-                      body={(rowData) => {
-                        if (!rowData.date)
-                          return <span>No date available</span>;
-                        return (
-                          <span className="text-white ">
-                            {formatDate(rowData.date)}
-                          </span>
-                        );
-                      }}
-                    />
 
-                    <Column
-                      field="eventname"
-                      headerClassName="center-header"
-                      header="Event Name"
-                      className="text-white text-center"
-                    />
-                    <Column
-                      field="role"
-                      headerClassName="center-header"
-                      header="Role"
-                      className="text-white text-center"
-                    />
-                  </DataTable>
+                  <div className="overflow-x-auto">
+                    <DataTable
+                      value={flattenedEventsData}
+                      className="p-datatable-striped p-datatable-gridlines bg-gray-700 rounded-lg overflow-hidden border border-gray-600 w-full"
+                      aria-label="Upcoming Events Table"
+                    >
+                      <Column
+                        field="date"
+                        header="Date"
+                        headerClassName="center-header"
+                        className="w-36 sm:w-48 md:w-52 text-center text-white"
+                        body={(rowData) => {
+                          if (!rowData.date)
+                            return (
+                              <span className="text-gray-400">
+                                No date available
+                              </span>
+                            );
+                          return (
+                            <span className="text-white">
+                              {formatDate(rowData.date)}
+                            </span>
+                          );
+                        }}
+                      />
+
+                      <Column
+                        field="eventname"
+                        header="Event Name"
+                        headerClassName="center-header"
+                        className="text-white text-center w-48 sm:w-60 md:w-72"
+                      />
+
+                      <Column
+                        field="role"
+                        header="Role"
+                        headerClassName="center-header"
+                        className="text-white text-center w-32 sm:w-40 md:w-52"
+                      />
+                    </DataTable>
+                  </div>
                 </Card>
 
-                <Card className="p-6 bg-gray-700 bg-opacity-50 shadow-md rounded-lg border border-gray-600 hover:border-gray-500 transition-all duration-300">
+                <Card className="bg-gray-700 bg-opacity-50 shadow-md rounded-lg border border-gray-600 hover:border-gray-500 transition-all duration-300">
                   <h2 className="text-xl font-semibold flex items-center mb-4 text-white">
                     <i className="pi pi-check-square text-green-400 mr-2"></i>
                     Today's Tasks
@@ -302,9 +312,7 @@ const IndividualVolunteer = () => {
 
               <TabPanel header="Events">
                 <Card className="p-6 bg-gray-700 bg-opacity-50 border border-gray-600 hover:border-gray-500 transition-all duration-300">
-                  <p className="text-center text-gray-400">
-                    Events content will go here
-                  </p>
+                  <EventCard />
                 </Card>
               </TabPanel>
 

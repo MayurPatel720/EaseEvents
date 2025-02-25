@@ -107,6 +107,9 @@ const EventCard: React.FC = () => {
                     onError={handleError}
                     onScan={handleScan}
                     className="w-full h-full"
+                    constraints={{
+                      video: { facingMode: "environment" },
+                    }}
                   />
                 </div>
               </div>

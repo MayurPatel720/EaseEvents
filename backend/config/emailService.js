@@ -18,7 +18,6 @@ const sendTicketEmail = async (
       pass: process.env.EMAIL_PASS,
     },
   });
-  // Example server-side code (Node.js)
   const formatDate = (rawDate) => {
     const date = new Date(rawDate);
     return date.toLocaleDateString("en-US", {
@@ -271,18 +270,17 @@ const sendTicketEmail = async (
 
 `,
 
-    // Ensure the QR Code is properly attached
+   
     attachments: [
       {
         filename: "ticket_qr.png",
-        path: qrCodePath, // Path where the QR Code is stored
-        cid: "qrCode", // Ensure this matches the <img> tag in the email template
-        contentType: "image/png", // Ensure correct MIME type
+        path: qrCodePath, 
+        cid: "qrCode",
+        contentType: "image/png",
       },
     ],
   };
 
-  // Send email
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.log("Error sending email:", error);

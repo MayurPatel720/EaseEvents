@@ -17,6 +17,12 @@ const EditParticipant = async (formdata: any) => {
   );
   return res.data;
 };
+
+const EditOrganizer = async (formdata: any) => {
+  const res = await axios.put(`${api}/user/profile/${formdata.userID}`, formdata);
+  return res.data;
+};
+
 const DeleteParticipant = async (userids: any) => {
   const res = await axios.post(`${api}/participant/delete`, userids);
   return res.data;
@@ -24,6 +30,10 @@ const DeleteParticipant = async (userids: any) => {
 
 const FetchEvent = async () => {
   const response = await axios.get(`${api}/event/all`);
+  return response.data;
+};
+const FetchOGDetail = async (userID: string) => {
+  const response = await axios.get(`${api}/user/profileDetails/${userID}`);
   return response.data;
 };
 
@@ -77,6 +87,19 @@ export const useEditParticipant = () => {
 export const useDeleteParticipant = () => {
   return useMutation({
     mutationFn: DeleteParticipant,
+  });
+};
+
+export const useEditOrganizer = () => {
+  return useMutation({
+    mutationFn: EditOrganizer,
+  });
+};
+
+export const useGetOrganizerDetails = (userID: string) => {
+  return useQuery({
+    queryFn: () => FetchOGDetail(userID),
+    queryKey: ["getorgade"],
   });
 };
 

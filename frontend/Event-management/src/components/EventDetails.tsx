@@ -12,6 +12,8 @@ import { InputText } from "primereact/inputtext";
 import { Toast } from "primereact/toast";
 import moment from "moment";
 import axios from "axios";
+import { Calendar } from "primereact/calendar";
+import { Dropdown } from "primereact/dropdown";
 
 interface RouteParams {
   eventId?: string;
@@ -273,7 +275,6 @@ const EventDetails: React.FC = () => {
                 />
               </div>
 
-              {/* Date Field */}
               <div className="col-12">
                 <label
                   htmlFor="date"
@@ -281,21 +282,20 @@ const EventDetails: React.FC = () => {
                 >
                   Date
                 </label>
-                <InputText
+
+                <Calendar
                   id="date"
-                  type="date"
-                  value={moment(editedEvent.date).format("YYYY-MM-DD")}
+                  dateFormat="dd-mm-yy"
+                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                  value={editedEvent.date || null}
                   onChange={(e) =>
                     setEditedEvent({
                       ...editedEvent,
-                      date: new Date(e.target.value),
+                      date: e.value,
                     })
                   }
-                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
                 />
               </div>
-
-              {/* Start Time Field */}
               <div className="col-12">
                 <label
                   htmlFor="startTime"
@@ -303,20 +303,20 @@ const EventDetails: React.FC = () => {
                 >
                   Start Time
                 </label>
-                <InputText
+                <Calendar
                   id="startTime"
-                  type="time"
-                  value={moment(editedEvent.startTime).format("HH:mm")}
+                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                  value={moment(editedEvent.startTime).toDate()}
                   onChange={(e) =>
                     setEditedEvent({
                       ...editedEvent,
                       startTime: e.target.value,
                     })
                   }
-                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                  hourFormat="12"
+                  timeOnly
                 />
               </div>
-
               <div className="col-12">
                 <label
                   htmlFor="endTime"
@@ -324,14 +324,15 @@ const EventDetails: React.FC = () => {
                 >
                   End Time
                 </label>
-                <InputText
+                <Calendar
                   id="endTime"
-                  type="time"
-                  value={moment(editedEvent.endTime).format("HH:mm")}
+                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                  value={moment(editedEvent.endTime).toDate()}
                   onChange={(e) =>
                     setEditedEvent({ ...editedEvent, endTime: e.target.value })
                   }
-                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                  hourFormat="12"
+                  timeOnly
                 />
               </div>
 
@@ -342,16 +343,21 @@ const EventDetails: React.FC = () => {
                 >
                   Ticket Category
                 </label>
-                <InputText
+                <Dropdown
                   id="ticketCategory"
                   value={editedEvent.ticketCategory}
+                  options={[
+                    { label: "free", value: "free" },
+                    { label: "paid", value: "paid" },
+                  ]}
                   onChange={(e) =>
                     setEditedEvent({
                       ...editedEvent,
-                      ticketCategory: e.target.value,
+                      ticketCategory: e.value,
                     })
                   }
-                  className="w-full p-3 border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                  placeholder="Select Ticket Type"
+                  className="w-full border border-gray-300 rounded-lg hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
                 />
               </div>
 

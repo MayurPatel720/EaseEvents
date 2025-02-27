@@ -48,7 +48,7 @@ export default function TemplateDemo({ toggleSidebar }: any) {
       </div>
       <Avatar
         className="hover:cursor-pointer"
-        image="https://primefaces.org/cdn/primereact/images/avatar/amyelsner.png"
+        image="https://uploads-ssl.webflow.com/647c2797a041413036e8e6fd/647d8981865d5dee2d03896e_Daco_5511364.png"
         shape="circle"
       />
     </div>

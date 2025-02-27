@@ -28,7 +28,7 @@ const ContactCard = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-6">
+      {/* <div className="flex flex-wrap gap-2 mb-6">
         <button className="flex-1 bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-md">
           Audio
         </button>
@@ -41,17 +41,17 @@ const ContactCard = () => {
         <button className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md">
           Share
         </button>
-      </div>
+      </div> */}
 
       <div className="space-y-4">
         {user && (
           <>
             <DetailRow label="Name" value={user.username} />
             {/* <DetailRow label="Number" value="(808) 676-7382" /> */}
-            <DetailRow label="Location" value="Enter an address..." />
+            {/* <DetailRow label="Location" value="Enter an address..." /> */}
             <DetailRow label="Email" value={user.email} />
-            <DetailRow label="Company" value="Enter a name..." />
-            <DetailRow label="Status" value="Add a tag..." />
+            {/* <DetailRow label="Company" value="Enter a name..." /> */}
+            {/* <DetailRow label="Statu s" value="Add a tag..." /> */}
           </>
         )}
       </div>

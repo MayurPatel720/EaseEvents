@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import MyLayout from "../layout/MainLayout";
 import { Sidebar } from "primereact/sidebar";
 import { Button } from "primereact/button";
@@ -18,10 +18,13 @@ import { useCreateEvent, useFetchMyEvent } from "../Queries/Allquery";
 import { useNavigate } from "react-router";
 import { useSelector } from "react-redux";
 import { useQueryClient } from "@tanstack/react-query";
+import { Toast } from "primereact/toast";
 
 const AllEvents: React.FC = () => {
   const user = useSelector((store: any) => store.auth.user);
   const navigate = useNavigate();
+  const toast = useRef<Toast>(null);
+
   const [visible, setVisible] = useState<boolean>(false);
 
   const [title, settitle] = useState<string>("");
@@ -61,9 +64,40 @@ const AllEvents: React.FC = () => {
   if (!user) {
     return <div>Loading user information...</div>;
   }
+  const showSuccess = (message: string) => {
+    toast.current?.show({
+      severity: "success",
+      summary: "Success",
+      detail: message,
+      life: 3000,
+    });
+  };
+
+  const showError = (message: string) => {
+    toast.current?.show({
+      severity: "error",
+      summary: "Error",
+      detail: message,
+      life: 3000,
+    });
+  };
 
   const handlesubmit = async (e: any) => {
     e.preventDefault();
+
+    if (!title || !venue || !Date || !starttime || !endtime || !ticketavaible) {
+      showError("Please fill in all required fields.");
+      return;
+    }
+
+    // const fileInput = document.querySelector(
+    //   'input[type="file"]'
+    // ) as HTMLInputElement;
+    // if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+    //   showError("Please upload an image for the event.");
+    //   return;
+    // }
+
     const formdata = {
       title: title,
       venue: venue,
@@ -71,31 +105,36 @@ const AllEvents: React.FC = () => {
       startTime: starttime,
       endTime: endtime,
       image:
-        "https://storage.theoryandpractice.ru/tnp/uploads/course_image_unit/000/021/537/image/base_2dd40556b8.jpg",
+        "https://storage.theoryandpractice.ru/tnp/uploads/course_image_unit/000/021/537/image/base_2dd40556b8.jpg", // Replace this with actual uploaded image
       ticketCategory: selectedCategory,
       ticketsAvailable: ticketavaible,
       ticketPrice: ticketprice,
       createdBy: user._id,
     };
+
     setLoading(true);
+
     createEvent(formdata, {
       onSuccess: () => {
+        showSuccess("Event created successfully!");
         queryClient.invalidateQueries({ queryKey: ["myevents"] });
         setLoading(false);
         setVisible(false);
-        console.log("Event creation successful!");
       },
-      onError: (error) => {
+      onError: (error: any) => {
+        if (error.message.includes("Network Error")) {
+          showError("Network error: Please check your internet connection.");
+        } else {
+          showError(`Error: ${error.message}`);
+        }
         setLoading(false);
-        console.error("Failed to create event:", error.message);
       },
     });
-
-    console.log(formdata);
   };
 
   return (
     <MyLayout>
+      <Toast ref={toast} />
       {isError && <p>error : {error.message}</p>}
       <Sidebar visible={visible} onHide={() => setVisible(false)} fullScreen>
         <div className="pl-10">
@@ -221,6 +260,9 @@ const AllEvents: React.FC = () => {
 
           <div className="flex mt-10 flex-wrap gap-4 w-full">
             <Button
+              pt={{
+                label: { className: "text-white" },
+              }}
               className="w-full  bg-blue-500 p-2"
               label="Submit"
               loading={loading}

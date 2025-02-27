@@ -158,4 +158,38 @@ router.post("/Vollogin", async function (req, res) {
   }
 });
 
+router.get("/profileDetails/:userID", async function (req, res) {
+  try {
+    const { userID } = req.params;
+    const userdetails = await userSchema.findById(userID);
+
+    if (!userdetails) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(userdetails);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+});
+
+router.put("/profile/:userID", async function (req, res) {
+  try {
+    const { userID } = req.params;
+    const updates = req.body;
+
+    const existingUser = await userSchema.findById(userID);
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const updatedUser = await userSchema.findByIdAndUpdate(userID, updates, {
+      new: true,
+      runValidators: true,
+    });
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+});
+
 module.exports = router;

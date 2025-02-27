@@ -9,10 +9,12 @@ import { loginStart, loginSuccess } from "../Store/Reducers/AuthReducer";
 export default function VolunteerLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
+    setLoading(true);
     dispatch(loginStart());
 
     const res = await axios.post(`${api}/user/Vollogin`, {
@@ -56,10 +58,21 @@ export default function VolunteerLogin() {
           />
           <button
             type="submit"
+            disabled={loading}
+            className={`w-full py-2 rounded-lg text-white ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600"
+            }`}
             style={{ marginTop: "40px" }}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg"
           >
-            Login
+            <span>
+              {loading ? (
+                <p className="text-white">Loading...</p>
+              ) : (
+                <p className="text-white">Login</p>
+              )}
+            </span>
           </button>
         </form>
         <p className="text-center text-sm text-gray-500 mt-4">

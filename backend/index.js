@@ -18,7 +18,7 @@ ConnectTODB();
 app.set("view engine", "ejs");
 app.use(
   cors({
-    origin: ["https://easeevents-cb281.web.app", "http://localhost:5174"],
+    origin: ["https://easeevents-cb281.web.app", "http://localhost:5173"],
     credentials: true,
   })
 );

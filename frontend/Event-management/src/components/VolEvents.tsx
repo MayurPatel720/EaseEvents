@@ -31,6 +31,10 @@ const EventCard: React.FC = () => {
   const handleScan = (data: any) => {
     if (data) {
       setScannedData(data.text);
+
+      setTimeout(() => {
+        setScannedData(null);
+      }, 2000);
     }
   };
 

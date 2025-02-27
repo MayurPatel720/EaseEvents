@@ -55,23 +55,15 @@ router.post("/register", async (req, res) => {
         });
       }
 
-      // Make sure we're explicitly setting all fields
       volunteerProfile.events.push({
         event: eventId,
         role,
         eventname: eventExists.title,
         date: eventExists.date,
         status: "pending",
-        assignedTasks: "", // Explicitly set as empty string
+        assignedTasks: "",
       });
     }
-
-    // Log right before saving to confirm the structure
-    console.log(
-      "Volunteer profile before save:",
-      JSON.stringify(volunteerProfile, null, 2)
-    );
-
     await volunteerProfile.save();
 
     eventExists.volunteers.push(volunteerProfile._id);
@@ -92,6 +84,7 @@ router.get("/:eventId", async (req, res) => {
   try {
     const { eventId } = req.params;
 
+    // ✅ Ensure we only return volunteers still linked to this event
     const volunteers = await Volunteer.find({
       "events.event": eventId,
     }).select("name email phone events");
@@ -126,19 +119,15 @@ router.post("/edittask", async (req, res) => {
     const { volunteerId, eventId, name, email, phone, role, assignedTasks } =
       req.body;
 
-    // Find the volunteer first
     const volunteer = await Volunteer.findById(volunteerId);
-
     if (!volunteer) {
       return res.status(404).json({ message: "Volunteer not found" });
     }
 
-    // Update basic info at the volunteer level
     if (name) volunteer.name = name;
     if (email) volunteer.email = email;
     if (phone) volunteer.phone = phone;
 
-    // Find the specific event in the events array
     const eventIndex = volunteer.events.findIndex(
       (event) => event.event.toString() === eventId
     );
@@ -149,16 +138,12 @@ router.post("/edittask", async (req, res) => {
         .json({ message: "Event not found for this volunteer" });
     }
 
-    // Update role if provided
     if (role) volunteer.events[eventIndex].role = role;
 
-    // Update assignedTasks - now a simple string
     if (assignedTasks !== undefined) {
-      // Convert any value to string to ensure compatibility
       volunteer.events[eventIndex].assignedTasks = String(assignedTasks);
     }
 
-    // Save the updated volunteer
     const updatedVolunteer = await volunteer.save();
 
     res.status(200).json({
@@ -180,28 +165,32 @@ router.delete("/delete/:volunteerId/:eventId", async (req, res) => {
       return res.status(404).json({ message: "Volunteer not found" });
     }
 
-    // Remove the event from the volunteer's events array
+    // ✅ Correctly remove the event from volunteer.events
     volunteer.events = volunteer.events.filter(
       (ev) => ev.event.toString() !== eventId
     );
 
-    // If the volunteer is not associated with any other event, delete them
     if (volunteer.events.length === 0) {
       await Volunteer.findByIdAndDelete(volunteerId);
     } else {
       await volunteer.save();
     }
 
-    // Remove volunteer from the event's volunteers list
+    // ✅ Correctly remove the volunteer from the event
     const event = await Event.findById(eventId);
     if (event) {
       event.volunteers = event.volunteers.filter(
-        (vId) => vId.toString() !== volunteerId
+        (vId) => vId.toString() !== volunteerId.toString()
       );
+
       await event.save();
     }
 
-    res.status(200).json({ message: "Volunteer successfully removed" });
+    console.log("Updated Volunteer:", await Volunteer.findById(volunteerId));
+
+    res
+      .status(200)
+      .json({ message: "Volunteer successfully removed from event" });
   } catch (error) {
     console.error("Error deleting volunteer:", error);
     res.status(500).json({ message: "Internal server error" });

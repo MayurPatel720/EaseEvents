@@ -1,20 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { Toast } from "primereact/toast";
+import dayjs from "dayjs";
+import aa from "../assets/aa.png";
+import duration from "dayjs/plugin/duration";
 import {
   api,
   useCreateVolunteer,
   useFetchEventByID,
 } from "../Queries/Allquery";
-import { Toast } from "primereact/toast";
+import { InputText } from "primereact/inputtext";
+
+dayjs.extend(duration);
+
+interface Countdown {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
 
 const EventParticipationForm: React.FC = () => {
   const { eventId }: any = useParams<{ eventId: string }>();
   const {
     data: event,
     error,
+    refetch,
     isLoading: fetchingEvent,
   } = useFetchEventByID(eventId);
   const { mutate: CreateVolunteer } = useCreateVolunteer();
@@ -26,11 +39,16 @@ const EventParticipationForm: React.FC = () => {
   const amount = 500;
   const [isLoading, setIsLoading] = useState(false);
   const toast = useRef<Toast>(null);
+  const [countdown, setCountdown] = useState<Countdown>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
-
   useEffect(() => {
     const loadRazorpayScript = () => {
       return new Promise((resolve) => {
@@ -46,9 +64,31 @@ const EventParticipationForm: React.FC = () => {
         document.body.appendChild(script);
       });
     };
-
     loadRazorpayScript();
   }, []);
+
+  useEffect(() => {
+    if (!event) return;
+    const targetDate = event.date
+      ? dayjs(event.date)
+      : dayjs("2025-06-0T14:00:00");
+
+    const updateTimer = () => {
+      const now = dayjs();
+      const diff = dayjs.duration(targetDate.diff(now));
+      setCountdown({
+        days: diff.days(),
+        hours: diff.hours(),
+        minutes: diff.minutes(),
+        seconds: diff.seconds(),
+      });
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [event]);
+
   const showToast = (
     severity: "success" | "error",
     summary: string,
@@ -60,21 +100,18 @@ const EventParticipationForm: React.FC = () => {
         summary,
         detail,
         life: 3000,
-        // Ensure visibility
-        style: {
-          zIndex: 9999,
-        },
+        style: { zIndex: 9999 },
       });
     } else {
       console.warn("Toast reference is not available");
     }
   };
+
   const addVolunteer = async () => {
     if (!name || !email || !phone) {
       showToast("error", "Form Error", "Please fill in all the fields.");
       return;
     }
-
     if (!isValidEmail(email)) {
       showToast(
         "error",
@@ -83,15 +120,12 @@ const EventParticipationForm: React.FC = () => {
       );
       return;
     }
-
     setIsLoading(true);
     const volunteerdata = { name, email, phone, eventId, role };
-
     try {
       await CreateVolunteer(volunteerdata);
       showToast("success", "Success", "Successfully joined event as volunteer");
     } catch (error: any) {
-      // Get the message from the enhanced error or use a default
       const errorMsg = error.message || "Failed to register as volunteer";
       showToast("error", "Registration Failed", errorMsg);
       console.error("Volunteer Registration Error:", error);
@@ -102,15 +136,17 @@ const EventParticipationForm: React.FC = () => {
 
   const handleFreeRegistration = async () => {
     if (!name || !email || !phone) {
-      alert("Please fill in all the fields.");
+      showToast("error", "Form Error", "Please fill in all the fields.");
       return;
     }
-
     if (!isValidEmail(email)) {
-      alert("Please enter a valid email address.");
+      showToast(
+        "error",
+        "Validation Error",
+        "Please enter a valid email address."
+      );
       return;
     }
-
     setIsLoading(true);
     try {
       await axios.post(`${api}/payment/create-order`, {
@@ -120,11 +156,15 @@ const EventParticipationForm: React.FC = () => {
         phone,
         eventId,
       });
-
-      alert("Registration successful! Check your email for confirmation.");
-    } catch (error) {
+      showToast(
+        "success",
+        "Success",
+        "Registration successful! Check your email for confirmation."
+      );
+      refetch();
+    } catch (error: any) {
       console.error("Registration error:", error);
-      alert("Registration failed, please try again.");
+      showToast("error", "Registration Failed", error.message);
     } finally {
       setIsLoading(false);
     }
@@ -132,17 +172,15 @@ const EventParticipationForm: React.FC = () => {
 
   const handlePayment = async () => {
     if (!name || !email || !phone) {
-      alert("Please fill in all the fields.");
+      const errorMsg = "fill in all details";
+      showToast("error", "Registration Failed", errorMsg);
       return;
     }
-
     if (!isValidEmail(email)) {
-      alert("Please enter a valid email address.");
+      showToast("error", "Registration Failed", "Enter Valid Email Address");
       return;
     }
-
     setIsLoading(true);
-
     try {
       const orderResponse = await axios.post(`${api}/payment/create-order`, {
         amount,
@@ -151,13 +189,11 @@ const EventParticipationForm: React.FC = () => {
         phone,
         eventId,
       });
-
       const {
         id: order_id,
         amount: order_amount,
         currency,
       } = orderResponse.data;
-
       const options = {
         key: "rzp_test_z9CNJTXfsMnl3s",
         amount: order_amount,
@@ -175,32 +211,34 @@ const EventParticipationForm: React.FC = () => {
                 razorpay_signature: response.razorpay_signature,
               }
             );
-
             if (verifyResponse.data.success) {
-              alert("Payment successful! Check your email for the ticket.");
+              showToast(
+                "success",
+                "Success",
+                "Payment successful! Check your email for the ticket."
+              );
+              refetch();
             } else {
               alert("Payment verification failed!");
             }
           } catch (error) {
             console.error("Verification error:", error);
-            alert("Payment verification error. Please contact support.");
+            showToast(
+              "error",
+              "error",
+              "Payment verification error. Please contact support."
+            );
+            // alert("Payment verification error. Please contact support.");
           }
         },
-        prefill: {
-          name,
-          email,
-          contact: phone,
-        },
-        theme: {
-          color: "#3399cc",
-        },
+        prefill: { name, email, contact: phone },
+        theme: { color: "#3399cc" },
       };
-
       const razorpay = new (window as any).Razorpay(options);
       razorpay.open();
     } catch (error) {
       console.error("Payment error:", error);
-      alert("Payment failed, please try again.");
+      showToast("error", "error", "Payment failed, please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -208,129 +246,183 @@ const EventParticipationForm: React.FC = () => {
 
   if (fetchingEvent) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
-
-  return (
-    <div className="max-w-md mx-auto p-6 border rounded-md shadow-md bg-white">
-      <Toast ref={toast} />
-
-      <h2 className="text-2xl font-bold mb-4 text-center">
-        Participate in Event {event.title}
-      </h2>
-      <p className="text-black">Tickets available : {event.ticketsAvailable}</p>
-      <div className="mt-4">
-        <label className="font-medium">Register as:</label>
-        <div className="flex gap-4 mt-2">
-          <button
-            onClick={() => setusertype("participant")}
-            className={`px-4 py-2 rounded-lg ${
-              usertype === "participant"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200"
-            }`}
-          >
-            Participant
-          </button>
-          <button
-            onClick={() => setusertype("volunteer")}
-            className={`px-4 py-2 rounded-lg ${
-              usertype === "volunteer"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200"
-            }`}
-          >
-            Volunteer
-          </button>
+  const isEventPast = dayjs(event.date).isBefore(dayjs());
+  if (isEventPast) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center p-6  rounded-lg  max-w-md mx-auto">
+          <h2 className="text-3xl font-bold text-red-600 mb-4">
+            Event Participation Ended for {event.title}
+          </h2>
+          <p className="text-gray-600 mb-4">
+            We're sorry, but the event has already concluded. Thank you for your
+            interest!
+          </p>
         </div>
       </div>
-      <form className="mt-4 space-y-4">
-        <input
-          type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full p-2 border rounded-md"
-          required
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-2 border rounded-md"
-          required
-        />
-        <input
-          type="tel"
-          placeholder="Phone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="w-full p-2 border rounded-md"
-          required
-        />
-        {usertype === "volunteer" && (
-          <>
-            <select
-              value={role}
-              onChange={(e) => setrole(e.target.value)}
+    );
+  }
+  return (
+    <div className="flex flex-col md:flex-row min-h-screen">
+      <Toast ref={toast} />
+
+      <div
+        style={{
+          backgroundColor: "#F2F2F2",
+          backgroundSize: "cover",
+          backgroundPosition: "center center",
+          backgroundImage: `url(${aa})`,
+        }}
+        className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 md:p-10"
+      >
+        <h2 className="text-sm uppercase text-gray-600 tracking-widest text-center">
+          You're invited to participate in
+        </h2>
+        <h1 className="text-3xl md:text-4xl font-bold text-green-800 my-3 text-center">
+          {event.title}
+        </h1>
+        <p className="text-lg uppercase text-gray-700 text-center">
+          {event.date ? dayjs(event.date).format("DD MMM YYYY") : "Event Date"}{" "}
+          at {event.venue}
+        </p>
+        <p className="text-black font-medium uppercase mt-2 text-center">
+          Tickets available:{" "}
+          <span className="font-bold">{event.ticketsAvailable}</span>
+        </p>
+        {/* Live Countdown Timer */}
+        <div className="flex flex-wrap justify-center space-x-4 mt-6">
+          {Object.entries(countdown).map(([label, value], index) => (
+            <div
+              key={index}
+              className="bg-white p-3 rounded-lg shadow-md text-center w-20 m-2"
+            >
+              <p className="text-xl font-bold text-green-700">
+                {value.toString().padStart(2, "0")}
+              </p>
+              <p className="text-sm text-gray-500 uppercase">{label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="w-full md:w-1/2 flex flex-col justify-center items-center bg-white p-6 sm:p-8 md:p-10 rounded-lg shadow-lg">
+        <div className="w-full max-w-lg">
+          <div className="mb-4">
+            <label className="text-green-800 font-semibold">Register as:</label>
+            <div className="flex gap-4 mt-2">
+              <button
+                onClick={() => setusertype("participant")}
+                className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                  usertype === "participant"
+                    ? "bg-green-500 text-white shadow-md"
+                    : "bg-gray-200 hover:bg-gray-300"
+                }`}
+              >
+                Participant
+              </button>
+              <button
+                onClick={() => setusertype("volunteer")}
+                className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                  usertype === "volunteer"
+                    ? "bg-green-500 text-white shadow-md"
+                    : "bg-gray-200 hover:bg-gray-300"
+                }`}
+              >
+                Volunteer
+              </button>
+            </div>
+          </div>
+
+          {/* Form Fields */}
+          <form className="space-y-4">
+            <InputText
+              type="text"
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="w-full p-2 border rounded-md"
-            >
-              <option value="registration">registration</option>
-              <option value="setup">setup</option>
-              <option value="coordinator">coordinator</option>
-              <option value="usher">usher</option>
-              <option value="technical">technical</option>
-              <option value="security">security</option>
-              <option value="general">general</option>
-            </select>
-          </>
-        )}
-        {usertype == "volunteer" ? (
-          <>
-            <button
-              type="button"
-              onClick={addVolunteer}
-              className={`w-full py-2 text-white rounded-md ${
-                isLoading
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-blue-500 hover:bg-blue-600"
-              }`}
-              disabled={isLoading}
-            >
-              {isLoading ? "Processing..." : `Register as Volunteer`}
-            </button>{" "}
-          </>
-        ) : (
-          <>
-            {event.ticketCategory === "free" ? (
+              required
+            />
+            <InputText
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-2 border rounded-md"
+              required
+            />
+            <InputText
+              type="tel"
+              placeholder="Phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full p-2 border rounded-md"
+              required
+            />
+            {usertype === "volunteer" && (
+              <select
+                value={role}
+                onChange={(e) => setrole(e.target.value)}
+                className="w-full p-2 border rounded-md"
+              >
+                <option value="" disabled selected>
+                  Select a role
+                </option>
+                <option value="registration">Registration</option>
+                <option value="setup">Setup</option>
+                <option value="coordinator">Coordinator</option>
+                <option value="usher">Usher</option>
+                <option value="technical">Technical</option>
+                <option value="security">Security</option>
+                <option value="general">General</option>
+              </select>
+            )}
+            {usertype === "volunteer" ? (
               <button
                 type="button"
-                onClick={handleFreeRegistration}
-                className={`w-full py-2 text-white rounded-md ${
+                onClick={addVolunteer}
+                className={`w-full py-2 text-white rounded-md transition-all duration-200 ${
                   isLoading
                     ? "bg-gray-500 cursor-not-allowed"
-                    : "bg-blue-500 hover:bg-blue-600"
+                    : "bg-green-600 hover:bg-green-800"
                 }`}
                 disabled={isLoading}
               >
-                {isLoading ? "Processing..." : `Register`}
+                {isLoading ? "Processing..." : "Register as Volunteer"}
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={handlePayment}
-                className={`w-full py-2 text-white rounded-md ${
-                  isLoading
-                    ? "bg-gray-500 cursor-not-allowed"
-                    : "bg-blue-500 hover:bg-blue-600"
-                }`}
-                disabled={isLoading}
-              >
-                {isLoading ? "Processing..." : `Pay ₹${amount} & Register`}
-              </button>
+              <>
+                {event.ticketCategory === "free" ? (
+                  <button
+                    type="button"
+                    onClick={handleFreeRegistration}
+                    className={`w-full py-2 text-white rounded-md transition-all duration-200 ${
+                      isLoading
+                        ? "bg-gray-500 cursor-not-allowed"
+                        : "bg-green-600 hover:bg-green-800"
+                    }`}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Processing..." : "Register"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handlePayment}
+                    className={`w-full py-2 text-white rounded-md transition-all duration-200 ${
+                      isLoading
+                        ? "bg-gray-500 cursor-not-allowed"
+                        : "bg-green-600 hover:bg-green-800"
+                    }`}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Processing..." : `Pay ₹${amount} & Register`}
+                  </button>
+                )}
+              </>
             )}
-          </>
-        )}
-      </form>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };

@@ -262,7 +262,7 @@ const Participants = () => {
         </Dialog>
 
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="text-xl md:text-2xl pl-3">
+          <h2 className="text-xl font-bold md:text-2xl pl-3">
             Participants of {event?.title || "Event"}
           </h2>
 

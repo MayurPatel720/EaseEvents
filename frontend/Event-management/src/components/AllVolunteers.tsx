@@ -319,7 +319,7 @@ const AllVolunteers = () => {
       <Toast ref={toast} />
       <div className="container p-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="text-xl md:text-2xl pl-3">Volunteers</h2>
+          <h2 className="text-xl font-bold md:text-2xl pl-3">Volunteers</h2>
 
           <Toolbar
             right={() => (

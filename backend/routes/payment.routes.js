@@ -40,15 +40,18 @@ router.post("/create-order", async (req, res) => {
       Math.random() * 10000
     )}`;
 
-    // Create order in Razorpay
     const options = {
-      amount: amount * 100, // Convert to paise
+      amount: amount * 100,
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     };
     const order = await razorpay.orders.create(options);
     if (event.ticketCategory == "free") {
       paymentStatus = "paid";
+      if (event.ticketsAvailable > 0) {
+        event.ticketsAvailable -= 1;
+        await event.save();
+      }
     } else {
       paymentStatus = "pending";
     }
@@ -104,7 +107,6 @@ router.post("/verify-payment", async (req, res) => {
         participant.paymentStatus = "paid";
         await participant.save();
 
-        // Only reduce ticket count when payment is confirmed
         if (event.ticketsAvailable > 0) {
           event.ticketsAvailable -= 1;
           await event.save();

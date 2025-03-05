@@ -2,9 +2,9 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
-// export const api = "http://localhost:8000";
+export const api = "http://localhost:8000";
 
-export const api = "https://easeevents.onrender.com";
+// export const api = "https://easeevents.onrender.com";
 
 const createEvent = async (formdata: any) => {
   const res = await axios.post(`${api}/event/create_event`, formdata);
@@ -19,10 +19,20 @@ const EditParticipant = async (formdata: any) => {
 };
 
 const EditOrganizer = async (formdata: any) => {
-  const res = await axios.put(`${api}/user/profile/${formdata.userID}`, formdata);
+  const res = await axios.put(
+    `${api}/user/profile/${formdata.userID}`,
+    formdata
+  );
   return res.data;
 };
 
+const GetAiMessage = async ({ message, eventDetails }: any) => {
+  const res = await axios.post(`${api}/ai/sendmessage`, {
+    message,
+    eventDetails,
+  });
+  return res.data;
+};
 const DeleteParticipant = async (userids: any) => {
   const res = await axios.post(`${api}/participant/delete`, userids);
   return res.data;
@@ -93,6 +103,12 @@ export const useDeleteParticipant = () => {
 export const useEditOrganizer = () => {
   return useMutation({
     mutationFn: EditOrganizer,
+  });
+};
+
+export const useGetAiMessage = () => {
+  return useMutation({
+    mutationFn: GetAiMessage,
   });
 };
 

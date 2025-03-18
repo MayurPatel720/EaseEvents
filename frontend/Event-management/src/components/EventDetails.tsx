@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import EventLayout from "../layout/EventLayout";
 import { BreadCrumb } from "primereact/breadcrumb";
 import { MenuItem } from "primereact/menuitem";
-import { useFetchEventByID } from "../Queries/Allquery";
+import { api, useFetchEventByID } from "../Queries/Allquery";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
@@ -62,7 +62,7 @@ const EventDetails: React.FC = () => {
   const handleUpdate = async () => {
     try {
       const response = await axios.post(
-        `http://localhost:8000/event/edit/${eventId}`,
+        `${api}/event/edit/${eventId}`,
         {
           title: editedEvent.title,
           venue: editedEvent.venue,

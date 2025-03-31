@@ -57,6 +57,11 @@ const fetchVolunteerdetail = async (VolID: string) => {
   return response.data;
 };
 
+const forgetpassword =async(email:string)=>{
+  const res = await axios.post(`${api}/user/forgetpassword`,{email});
+  return res;
+}
+
 const FetchMyEvent = async (userid: string) => {
   const response = await axios.post(`${api}/event/myevents`, { userid });
   return response.data;
@@ -82,6 +87,12 @@ export const useCreateEvent = () => {
     mutationFn: createEvent,
   });
 };
+
+export const useForgetPassword = ()=>{
+  return useMutation({
+    mutationFn :forgetpassword,
+  })
+}
 
 export const useCreateVolunteer = () => {
   return useMutation({

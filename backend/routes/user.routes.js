@@ -5,6 +5,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const Volunteer = require("../models/volunteer.model.js");
+const forgetpassword = require("../config/forgetpassword.js");
+const SECRET_KEY = process.env.JWT_SECRET || "your_secret_key";
 
 router.get("/register", function (req, res) {
   res.send("register");
@@ -60,6 +62,54 @@ router.get("/verify", async function (req, res) {
   } catch (error) {
     console.error("Verify error:", error);
     res.status(401).json({ message: "Invalid token" });
+  }
+});
+
+router.post("/forgetpassword", async function (req, res) {
+  try {
+    const { email } = req.body;
+    console.log(email);
+    
+    if (!email) return res.status(400).json({ message: "Email is required." });
+
+    const user = await userSchema.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    const resetToken = jwt.sign({ id: user._id }, SECRET_KEY, { expiresIn: "1h" });
+
+    const resetLink = `https://easeevents-cb281.web.app/resetpassword?token=${resetToken}`;
+    forgetpassword(email,resetLink);
+
+    return res.status(200).json({ message: "Reset link sent! Check your email." });
+  } catch (error) {
+    console.error("Forget Password Error:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.post("/resetpassword", async function (req, res) {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Token and new password are required." });
+    }
+
+    const decoded = jwt.verify(token, SECRET_KEY);
+    if (!decoded) return res.status(401).json({ message: "Invalid or expired token." });
+
+    const user = await userSchema.findById(decoded.id);
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.status(200).json({ message: "Password reset successful!" });
+  } catch (error) {
+    console.error("Reset Password Error:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 });
 

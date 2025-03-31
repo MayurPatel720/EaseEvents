@@ -169,7 +169,7 @@ const Login = () => {
                 placeholder="Enter your username"
               />
             </div>
-            <div className="mb-6">
+            <div className="mb-3">
               <label
                 htmlFor="password"
                 className="block text-gray-700 font-medium mb-2"
@@ -186,6 +186,9 @@ const Login = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 placeholder="Enter your password"
               />
+            </div>
+            <div className="mb-6 flex justify-end">
+              <p onClick={()=>navigate("/forgetpassword")} className="font-medium text-sm text-blue-500 underline hover:cursor-pointer active:text-blue-700">Forget Password?</p>
             </div>
             <button
               type="submit"

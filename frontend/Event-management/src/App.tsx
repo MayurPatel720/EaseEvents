@@ -21,6 +21,8 @@ import { api } from "./Queries/Allquery";
 import AllVolunteers from "./components/AllVolunteers";
 import VolLogin from "./components/VolLogin";
 import IndividualVolunteer from "./components/IndividualVolunteer";
+import Forget from "./components/Forget";
+import ResetPassword from "./components/ResetPassword";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -71,6 +73,8 @@ const App = () => {
         <Route path="/VolLogin" element={<VolLogin />} />
         <Route path="/VolDashBoard" element={<IndividualVolunteer />} />
         <Route path="/register" element={<RegisterForm />} />
+        <Route path="/forgetpassword" element={<Forget />} />
+        <Route path="/resetpassword" element={<ResetPassword/>} />
         <Route
           path="/participate/:eventId"
           element={<EventParticipationForm />}

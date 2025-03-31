@@ -35,7 +35,7 @@ app.use("/payment", paymnetroutes);
 app.use("/event", eventroutes);
 app.use("/participant", participanteroutes);
 app.use("/volunteer", volunteerroutes);
-app.use("/ai", aicall);
+// app.use("/ai", aicall);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

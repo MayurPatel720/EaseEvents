@@ -8,6 +8,7 @@ const Volunteer = require("../models/volunteer.model.js");
 const forgetpassword = require("../config/forgetpassword.js");
 const SECRET_KEY = process.env.JWT_SECRET || "your_secret_key";
 
+// Register route
 router.get("/register", function (req, res) {
   res.send("register");
 });
@@ -37,6 +38,7 @@ router.post("/register", async function (req, res) {
   }
 });
 
+// Verify user (check if the token is valid)
 router.get("/verify", async function (req, res) {
   try {
     const token = req.headers.authorization?.split(" ")[1] || req.cookies.token;
@@ -65,11 +67,10 @@ router.get("/verify", async function (req, res) {
   }
 });
 
+// Forget password (send reset link to email)
 router.post("/forgetpassword", async function (req, res) {
   try {
     const { email } = req.body;
-    console.log(email);
-    
     if (!email) return res.status(400).json({ message: "Email is required." });
 
     const user = await userSchema.findOne({ email });
@@ -78,41 +79,52 @@ router.post("/forgetpassword", async function (req, res) {
     const resetToken = jwt.sign({ id: user._id }, SECRET_KEY, { expiresIn: "1h" });
 
     const resetLink = `https://easeevents-cb281.web.app/resetpassword?token=${resetToken}`;
-    forgetpassword(email,resetLink);
-
-    return res.status(200).json({ message: "Reset link sent! Check your email." });
+    try {
+      await forgetpassword(email, resetLink); // Ensure this function handles errors
+      return res.status(200).json({ message: "Reset link sent! Check your email." });
+    } catch (error) {
+      console.error("Error sending reset email:", error);
+      return res.status(500).json({ message: "Failed to send reset email." });
+    }
   } catch (error) {
     console.error("Forget Password Error:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
+// Reset password
 router.post("/resetpassword", async function (req, res) {
-  try {
-    const { token, newPassword } = req.body;
-    if (!token || !newPassword) {
-      return res.status(400).json({ message: "Token and new password are required." });
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res.status(400).json({ message: "Token and new password are required" });
+  }
+
+  // Verify token
+  jwt.verify(token, SECRET_KEY, async (err, decoded) => {
+    if (err && err.name === 'TokenExpiredError') {
+      return res.status(400).json({ message: "Token has expired" });
     }
 
-    const decoded = jwt.verify(token, SECRET_KEY);
-    if (!decoded) return res.status(401).json({ message: "Invalid or expired token." });
+    if (err) {
+      console.error("JWT verification failed:", err);
+      return res.status(400).json({ message: "Invalid token" });
+    }
 
-    const user = await userSchema.findById(decoded.id);
-    if (!user) return res.status(404).json({ message: "User not found." });
+    // Proceed with password reset logic
+    const user = await userSchema.findById(decoded.id); // decoded.id instead of decoded.email
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-    user.password = hashedPassword;
+    user.password = await bcrypt.hash(newPassword, 10); // Hash the new password
     await user.save();
 
-    return res.status(200).json({ message: "Password reset successful!" });
-  } catch (error) {
-    console.error("Reset Password Error:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
+    return res.status(200).json({ message: "Password reset successful" });
+  });
 });
 
+// Login route
 router.post("/login", async function (req, res) {
   try {
     const { username, password } = req.body;
@@ -142,9 +154,9 @@ router.post("/login", async function (req, res) {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production", // Ensure this is secure in production
       sameSite: "lax",
-      maxAge: 3600000,
+      maxAge: 3600000, // 1 hour
     });
 
     res.json({
@@ -165,14 +177,10 @@ router.post("/login", async function (req, res) {
   }
 });
 
-router.get("/login", function (req, res) {
-  res.send("login");
-});
-
+// Volunteer login route
 router.post("/Vollogin", async function (req, res) {
   try {
     const { username, password } = req.body;
-    console.log(username);
 
     const volunte = await Volunteer.findOne({ name: username });
 
@@ -196,9 +204,9 @@ router.post("/Vollogin", async function (req, res) {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production", // Ensure this is secure in production
       sameSite: "lax",
-      maxAge: 3600000,
+      maxAge: 3600000, // 1 hour
     });
     res
       .status(200)
@@ -208,6 +216,7 @@ router.post("/Vollogin", async function (req, res) {
   }
 });
 
+// Get profile details
 router.get("/profileDetails/:userID", async function (req, res) {
   try {
     const { userID } = req.params;
@@ -223,6 +232,7 @@ router.get("/profileDetails/:userID", async function (req, res) {
   }
 });
 
+// Update profile
 router.put("/profile/:userID", async function (req, res) {
   try {
     const { userID } = req.params;

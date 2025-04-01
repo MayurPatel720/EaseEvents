@@ -12,6 +12,7 @@ import { Toast } from "primereact/toast";
 import axios from "axios"; // Assuming you're using axios for API calls
 import { Dialog } from "primereact/dialog";
 import { Dropdown } from "primereact/dropdown";
+import "../css/parti.css"
 
 // Updated interface to match the actual data structure
 interface VolunteerEvent {
@@ -346,7 +347,7 @@ const AllVolunteers = () => {
         </div>
 
         <div className="overflow-auto">
-          <DataTable
+          <DataTable className="table-one"
             ref={dt}
             value={volunteers}
             selection={selectedParticipants}

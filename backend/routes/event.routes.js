@@ -188,4 +188,21 @@ router.delete("/delete/:eventID", async (req, res) => {
   }
 });
 
+router.post("/sendquestion", async (req, res) => {
+  try {
+    const { qu, ans, id } = req.body;
+
+    const event = await Event.findById(id);
+    if (!event) return res.status(404).json({ message: "Event does not exist" });
+
+    event.questions.push({ q: qu, answer: ans });
+
+    await event.save();
+
+    res.status(200).json({ message: "Question added successfully", event });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
 module.exports = router;

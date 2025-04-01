@@ -36,7 +36,7 @@ export default function TemplateDemo({ toggleSidebar }: any) {
         navigate("/");
       }}
       alt="logo"
-      src="./src/assets/EaseEvent logo.png"
+      src="https://drive.google.com/thumbnail?id=1DYSJN9HV-DOlYzpWN7QAkOGH3_Wz6QTg&sz=w1000"
       className="h-[35px] ml-1 mr-1 hover:cursor-pointer"
     />
   );
@@ -45,7 +45,7 @@ export default function TemplateDemo({ toggleSidebar }: any) {
     <div className="flex align-items-center gap-2 group">
       <div className="hidden group-hover:block">
         <ContactCard />
-      </div>
+      </div>  
       <Avatar
         className="hover:cursor-pointer"
         image="https://uploads-ssl.webflow.com/647c2797a041413036e8e6fd/647d8981865d5dee2d03896e_Daco_5511364.png"

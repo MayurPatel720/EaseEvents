@@ -33,6 +33,12 @@ const EventSchema = new Schema(
       },
     },
     ticketsAvailable: { type: Number, required: true, min: 0 },
+    questions:[
+      {
+        q :{type:String},
+        answer : {type:String}
+      }
+    ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import "../css/parti.css";
 import { useParams } from "react-router-dom";
 import EventLayout from "../layout/EventLayout";
 import {
@@ -6,7 +7,6 @@ import {
   useEditParticipant,
   useFetchParticipantsByEventId,
 } from "../Queries/Allquery";
-import "../css/parti.css";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Toolbar } from "primereact/toolbar";
 import { DataTable } from "primereact/datatable";
@@ -187,8 +187,9 @@ const Participants = () => {
     return (
       <div className="flex space-x-2">
         <Button
+        style={{borderRadius:"50%"}}
           icon="pi pi-pencil"
-          className="p-button-rounded p-button-success p-button-outlined"
+          className="border-2 p-button-success p-button-outlined"
           onClick={() => handleEdit(rowData)}
         />
         <Button
@@ -226,33 +227,38 @@ const Participants = () => {
           onHide={() => setVisible(false)}
           footer={
             <div className="flex flex-wrap justify-end gap-2">
-              <Button
-                label="Cancel"
+              <button
                 onClick={() => setVisible(false)}
-                className="p-button-text"
-              />
-              <Button
-                label="Save"
+                className="bg-red-600 text-white  p-2 rounded-md "
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-blue-600  text-white p-2 rounded-md active:bg-blue-400"
                 onClick={handleConfirmEdit}
-                icon="pi pi-check"
-              />
+              >
+                Save
+              </button>
             </div>
           }
         >
           <div className="p-fluid space-y-2">
             <InputText
+              className="mt-1 p-2 block w-full rounded-md border-2"
               name="name"
               value={editParticipant?.name || ""}
               onChange={handleInputChange}
               placeholder="Name"
             />
             <InputText
+              className="mt-1 p-2 block w-full rounded-md border-2"
               name="email"
               value={editParticipant?.email || ""}
               onChange={handleInputChange}
               placeholder="Email"
             />
             <InputText
+              className="mt-1 p-2 block w-full rounded-md border-2"
               name="phone"
               value={editParticipant?.phone || ""}
               onChange={handleInputChange}
@@ -290,6 +296,9 @@ const Participants = () => {
 
         <div className="overflow-auto">
           <DataTable
+            className="table-one"
+            responsive-layout="stack"
+            breakpoint="960px"
             ref={dt}
             value={participants}
             selection={selectedParticipants}

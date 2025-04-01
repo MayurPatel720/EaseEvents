@@ -8,6 +8,7 @@ const eventroutes = require("./routes/event.routes.js");
 const paymnetroutes = require("./routes/payment.routes.js");
 const participanteroutes = require("./routes/participate.routes.js");
 const volunteerroutes = require("./routes/volunteer.routes.js");
+const analyticsroutes = require("./routes/analytics.routes.js");
 const aicall = require("./routes/aicall.routes.js");
 const indexroutes = require("./routes/index.routes");
 const ConnectTODB = require("./config/db.ts");
@@ -35,6 +36,7 @@ app.use("/payment", paymnetroutes);
 app.use("/event", eventroutes);
 app.use("/participant", participanteroutes);
 app.use("/volunteer", volunteerroutes);
+app.use("/anal",analyticsroutes );
 // app.use("/ai", aicall);
 
 const PORT = process.env.PORT;

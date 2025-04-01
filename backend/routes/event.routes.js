@@ -190,19 +190,38 @@ router.delete("/delete/:eventID", async (req, res) => {
 
 router.post("/sendquestion", async (req, res) => {
   try {
-    const { qu, ans, id } = req.body;
+    const { qu, ans, eventid, id } = req.body;
 
-    const event = await Event.findById(id);
+    // Find the event by event ID
+    let event = await Event.findById(eventid);
     if (!event) return res.status(404).json({ message: "Event does not exist" });
 
-    event.questions.push({ q: qu, answer: ans });
+    let updatedEvent;
 
-    await event.save();
+    if (id) {
+      // Update an existing question's answer
+      updatedEvent = await Event.findOneAndUpdate(
+        { _id: eventid, "questions._id": id }, // Find event with the specific question
+        { $set: { "questions.$.answer": ans } }, // Update the answer field
+        { new: true } // Return the updated document
+      );
 
-    res.status(200).json({ message: "Question added successfully", event });
+      if (!updatedEvent) {
+        return res.status(404).json({ message: "Question not found" });
+      }
+    } else {
+      // Add a new question
+      event.questions.push({ q: qu, answer: ans });
+      updatedEvent = await event.save();
+    }
+
+    res.status(200).json({ message: "Question added/updated successfully", event: updatedEvent });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server error", error });
   }
 });
+
+
 
 module.exports = router;

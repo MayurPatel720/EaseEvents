@@ -38,6 +38,11 @@ const DeleteParticipant = async (userids: any) => {
   return res.data;
 };
 
+const SendPassWord = async ({ans,id,eventid}:{ans:string, id:string,eventid:string})=>{
+  const res = await axios.post(`${api}/event/sendquestion`,{ans,id,eventid});
+  return res.data;
+};
+
 const FetchEvent = async () => {
   const response = await axios.get(`${api}/event/all`);
   return response.data;
@@ -110,6 +115,12 @@ export const useDeleteParticipant = () => {
     mutationFn: DeleteParticipant,
   });
 };
+
+export const useSendQuestion = ()=>{
+  return useMutation({
+    mutationFn: SendPassWord,
+  })
+}
 
 export const useEditOrganizer = () => {
   return useMutation({

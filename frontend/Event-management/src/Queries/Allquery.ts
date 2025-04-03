@@ -78,7 +78,7 @@ const fetchEventById = async (eventId: string) => {
 };
 
 const fetchParticipantsByEventId = async (eventId: string) => {
-  const response = await axios.get(`${api}/event/${eventId}/participants`);
+  const response = await axios.get(`${api}/event/${eventId}/participants`,{headers:{'Cache-Control': 'no-cache'}});
   return response.data;
 };
 

@@ -1,7 +1,8 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { api } from "../Queries/Allquery";
+import { Toast } from "primereact/toast";
 
 interface FormData {
   username: string;
@@ -10,6 +11,7 @@ interface FormData {
 }
 
 const RegisterForm: React.FC = () => {
+  const toast = useRef<Toast>(null);
   const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData>({
     username: "",
@@ -47,10 +49,12 @@ const RegisterForm: React.FC = () => {
       try {
         const res = await axios.post(`${api}/user/register`, formData);
         if (res.status === 200) {
+          toast.current?.show({severity:'success', summary: 'Success', detail:'Successfully registered', life: 3000});
           console.log("Successfully registered!");
           navigate("/");
         }
       } catch (error) {
+        toast.current?.show({severity:'error', summary: 'Error', detail:`${error}`, life: 3000});
         console.error("Error registering user:", error);
       }
     }

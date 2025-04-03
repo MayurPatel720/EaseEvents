@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const userSchema = require("../models/user.model.ts");
+const userSchema = require("../models/user.model.js");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -8,7 +8,6 @@ const Volunteer = require("../models/volunteer.model.js");
 const forgetpassword = require("../config/forgetpassword.js");
 const SECRET_KEY = process.env.JWT_SECRET || "your_secret_key";
 
-// Register route
 router.get("/register", function (req, res) {
   res.send("register");
 });
@@ -38,7 +37,6 @@ router.post("/register", async function (req, res) {
   }
 });
 
-// Verify user (check if the token is valid)
 router.get("/verify", async function (req, res) {
   try {
     const token = req.headers.authorization?.split(" ")[1] || req.cookies.token;
@@ -67,7 +65,6 @@ router.get("/verify", async function (req, res) {
   }
 });
 
-// Forget password (send reset link to email)
 router.post("/forgetpassword", async function (req, res) {
   try {
     const { email } = req.body;
@@ -92,7 +89,6 @@ router.post("/forgetpassword", async function (req, res) {
   }
 });
 
-// Reset password
 router.post("/resetpassword", async function (req, res) {
   const { token, newPassword } = req.body;
 
@@ -124,7 +120,6 @@ router.post("/resetpassword", async function (req, res) {
   });
 });
 
-// Login route
 router.post("/login", async function (req, res) {
   try {
     const { username, password } = req.body;
@@ -177,7 +172,6 @@ router.post("/login", async function (req, res) {
   }
 });
 
-// Volunteer login route
 router.post("/Vollogin", async function (req, res) {
   try {
     const { username, password } = req.body;
@@ -216,7 +210,6 @@ router.post("/Vollogin", async function (req, res) {
   }
 });
 
-// Get profile details
 router.get("/profileDetails/:userID", async function (req, res) {
   try {
     const { userID } = req.params;
@@ -232,7 +225,6 @@ router.get("/profileDetails/:userID", async function (req, res) {
   }
 });
 
-// Update profile
 router.put("/profile/:userID", async function (req, res) {
   try {
     const { userID } = req.params;

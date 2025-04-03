@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { Chart } from 'primereact/chart';
@@ -28,14 +27,10 @@ interface AttendeeData {
   rating?: number;
 }
 
-interface RegistrationTrend {
-  date: string;
-  count: number;
-}
 
 const EventAnalytics: React.FC = () => {
   // Sample data - in a real app, you would fetch this from an API
-  const [stats, setStats] = useState<EventStats>({
+  const [stats] = useState<EventStats>({
     totalRegistrations: 250,
     totalAttendees: 180,
     conversionRate: 72,
@@ -71,7 +66,7 @@ const EventAnalytics: React.FC = () => {
   });
 
   // Sample attendance breakdown data
-  const [attendanceData, setAttendanceData] = useState({
+  const [attendanceData] = useState({
     labels: ['Attended', 'No-shows'],
     datasets: [
       {
@@ -83,7 +78,7 @@ const EventAnalytics: React.FC = () => {
   });
 
   // Sample feedback ratings data
-  const [feedbackData, setFeedbackData] = useState({
+  const [feedbackData] = useState({
     labels: ['5 Stars', '4 Stars', '3 Stars', '2 Stars', '1 Star'],
     datasets: [
       {
@@ -396,6 +391,7 @@ const EventAnalytics: React.FC = () => {
           <div className="p-4 bg-white rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">Attendee List</h2>
             <DataTable 
+
               value={attendees} 
               paginator 
               rows={10} 
@@ -403,7 +399,7 @@ const EventAnalytics: React.FC = () => {
               loading={loading}
               responsiveLayout="scroll"
               emptyMessage="No attendees found."
-              className="p-datatable-sm"
+              className="table-one p-datatable-sm"
             >
               <Column field="id" header="ID" sortable style={{ width: '10%' }} />
               <Column field="name" header="Name" sortable style={{ width: '20%' }} />

@@ -34,7 +34,7 @@ const AllEvents: React.FC = () => {
   const [ticketavaible, setticketavaible] = useState<Nullable<number>>();
   const [starttime, setstartTime] = useState<Nullable<Date>>(null);
   const [endtime, setendTime] = useState<Nullable<Date>>(null);
-
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [Date, setDate] = useState<Nullable<Date>>(null);
   const [selectedCategory, setSelectedCategory] = useState("free");
   const queryClient = useQueryClient();
@@ -90,31 +90,41 @@ const AllEvents: React.FC = () => {
       return;
     }
 
-    // const fileInput = document.querySelector(
-    //   'input[type="file"]'
-    // ) as HTMLInputElement;
-    // if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-    //   showError("Please upload an image for the event.");
-    //   return;
-    // }
-
-    const formdata = {
-      title: title,
-      venue: venue,
-      date: Date,
-      startTime: starttime,
-      endTime: endtime,
-      image:
-        "https://storage.theoryandpractice.ru/tnp/uploads/course_image_unit/000/021/537/image/base_2dd40556b8.jpg", // Replace this with actual uploaded image
-      ticketCategory: selectedCategory,
-      ticketsAvailable: ticketavaible,
-      ticketPrice: ticketprice,
-      createdBy: user._id,
-    };
+  
+  
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("venue", venue);
+    formData.append("date", Date.toISOString());
+    formData.append("startTime", starttime.toISOString());
+    formData.append("endTime", endtime.toISOString());
+    formData.append("ticketCategory", selectedCategory);
+    if (selectedCategory === "paid") {
+      formData.append("ticketPrice", (ticketprice ?? 0).toString()); 
+  }
+    formData.append("ticketsAvailable", ticketavaible.toString());
+    formData.append("createdBy", user._id);
+    if (imageFile) {
+      formData.append("image", imageFile); 
+  }
+      console.log(formData);
+    
+    // const formdata = {
+    //   title: title,
+    //   venue: venue,
+    //   date: Date,
+    //   startTime: starttime,
+    //   endTime: endtime,
+    //   image:"as", // Replace this with actual uploaded image
+    //   ticketCategory: selectedCategory,
+    //   ticketsAvailable: ticketavaible,
+    //   ticketPrice: ticketprice,
+    //   createdBy: user._id,
+    // };
 
     setLoading(true);
 
-    createEvent(formdata, {
+    createEvent(formData, {
       onSuccess: () => {
         showSuccess("Event created successfully!");
         queryClient.invalidateQueries({ queryKey: ["myevents"] });
@@ -194,8 +204,9 @@ const AllEvents: React.FC = () => {
             </FloatLabel>
           </div>
           <div className="flex mt-10 flex-wrap gap-4 w-full">
-            <FileUpload
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+           <FileUpload
+            onSelect={(e) => setImageFile(e.files[0])} 
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               name="demo[]"
               url="/api/upload"
               multiple

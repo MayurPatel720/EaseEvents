@@ -1,7 +1,23 @@
+require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 const Event = require("../models/event.model");
+const { v2: cloudinary } = require("cloudinary");
+const multer = require("multer");
 
+cloudinary.config({
+  cloud_name: 'ddtqri4py',
+  api_key: '457897286296644',
+  api_secret: process.env.API_SECRET || "2XBKMMahnRC5q2m5j6qLWpz0fGc"
+});
+
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 
+  }
+});
 router.get("/all", async function (req, res) {
   try {
     const events = await Event.find();
@@ -11,36 +27,42 @@ router.get("/all", async function (req, res) {
     res.status(500).json({ message: "Error fetching events", error: err });
   }
 });
-
-router.post("/create_event", async function (req, res) {
-  const {
-    title,
-    venue,
-    date,
-    startTime,
-    endTime,
-    image,
-    ticketCategory,
-    ticketPrice,
-    ticketsAvailable,
-    createdBy,
-  } = req.body;
-
-  // Validation: You can add custom validations here if needed
-  if (
-    !title ||
-    !venue ||
-    !date ||
-    !startTime ||
-    !endTime ||
-    !image ||
-    !ticketCategory ||
-    !ticketsAvailable
-  ) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-
+router.post("/create_event", upload.single('image'), async function (req, res) {
+  
   try {
+    const {
+      title,
+      venue,
+      date,
+      startTime,
+      endTime,
+      ticketCategory,
+      ticketPrice,
+      ticketsAvailable,
+      createdBy,
+    } = req.body;
+   
+
+    if (
+      !title ||
+      !venue ||
+      !date ||
+      !startTime ||
+      !endTime ||
+      !ticketCategory ||
+      !ticketsAvailable ||
+      !req.file
+    ) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const fileStr = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    
+    const uploadResult = await cloudinary.uploader.upload(fileStr, {
+      folder: 'events',
+      resource_type: 'image'
+    });
+
     const newEvent = await Event.create({
       title,
       venue,
@@ -48,7 +70,7 @@ router.post("/create_event", async function (req, res) {
       startTime,
       endTime,
       createdBy,
-      image,
+      image: uploadResult.secure_url, 
       ticketCategory,
       ticketPrice: ticketCategory === "paid" ? ticketPrice : undefined,
       ticketsAvailable,
@@ -60,9 +82,10 @@ router.post("/create_event", async function (req, res) {
     });
   } catch (err) {
     console.error("Error creating event:", err);
-    res.status(500).json({ message: "Server error", error: err });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
+
 
 router.get("/create_event", function (req, res) {
   res.send("all events");
@@ -106,9 +129,9 @@ router.post("/myevents", async (req, res) => {
     console.error("Error fetching events:", error);
     res.status(500).json({ error: "Server error", details: error.message });
   }
-});
+}); 
 
-router.post("/edit/:eventId", async (req, res) => {
+router.post("/edit/:eventId", upload.single('image'), async (req, res) => {
   const eventId = req.params.eventId;
   try {
     console.log(`Received request to edit event: ${eventId}`);
@@ -125,7 +148,6 @@ router.post("/edit/:eventId", async (req, res) => {
       date,
       startTime,
       endTime,
-      image,
       ticketCategory,
       ticketPrice,
       ticketsAvailable,
@@ -139,7 +161,6 @@ router.post("/edit/:eventId", async (req, res) => {
       !date ||
       !startTime ||
       !endTime ||
-      !image ||
       !ticketCategory ||
       !ticketsAvailable
     ) {
@@ -147,16 +168,29 @@ router.post("/edit/:eventId", async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Update event
+    // Update event basic info
     existingEvent.title = title;
     existingEvent.venue = venue;
     existingEvent.date = date;
     existingEvent.startTime = startTime;
     existingEvent.endTime = endTime;
-    existingEvent.image = image;
     existingEvent.ticketCategory = ticketCategory;
     existingEvent.ticketPrice = ticketPrice;
     existingEvent.ticketsAvailable = ticketsAvailable;
+
+    // If a new image is uploaded, update it
+    if (req.file) {
+      // Convert the buffer to a data URI for Cloudinary
+      const fileStr = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      
+      // Upload the image to Cloudinary
+      const uploadResult = await cloudinary.uploader.upload(fileStr, {
+        folder: 'events',
+        resource_type: 'image'
+      });
+      
+      existingEvent.image = uploadResult.secure_url;
+    }
 
     await existingEvent.save();
     console.log("Event updated successfully");

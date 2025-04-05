@@ -2,9 +2,9 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
-// export const api = "http://localhost:8000";
+export const api = "http://localhost:8000";
 
-export const api = "https://easeevents.onrender.com";
+// export const api = "https://easeevents.onrender.com";
 
 const createEvent = async (formdata: any) => {
   const res = await axios.post(`${api}/event/create_event`, formdata);
@@ -47,6 +47,12 @@ const FetchEvent = async () => {
   const response = await axios.get(`${api}/event/all`);
   return response.data;
 };
+
+const FetchAnalytics = async (userID:string) =>{  
+  const res = await axios.get(`${api}/anal/dashboard-analytics?userid=${userID}`)
+  return res.data;
+}
+
 const FetchOGDetail = async (userID: string) => {
   const response = await axios.get(`${api}/user/profileDetails/${userID}`);
   return response.data;
@@ -148,6 +154,13 @@ export const useGetallEvents = () =>
     queryKey: ["allevents"],
     queryFn: FetchEvent,
   });
+
+  export const useGetAnalytics = (userID:string)=>{
+    return useQuery({
+      queryKey:["analytics"],
+      queryFn:()=> FetchAnalytics(userID),
+    })
+  }
 
 export const useFetchMyEvent = (userid: string) =>
   useQuery({

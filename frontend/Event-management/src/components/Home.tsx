@@ -12,17 +12,23 @@ import Calendar from "./Calender";
 import { Link, useNavigate } from "react-router";
 import { useGetAnalytics } from "../Queries/Allquery";
 import dayjs from "dayjs";
-import { JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from "react";
+import {
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+} from "react";
 
 const Home = () => {
   const user = useSelector((store: any) => store.auth.user);
   const navigate = useNavigate();
-  const userID = user._id; 
-  const {data} = useGetAnalytics(userID);
+  const userID = user._id;
+  const { data } = useGetAnalytics(userID);
   if (!user && !data) {
     return <div>Loading user information...</div>;
   }
-console.log(data);
+  console.log(data);
 
   const stats = [
     {
@@ -32,7 +38,9 @@ console.log(data);
     },
     {
       icon: <Ticket className="text-blue-600 w-6 h-6" />,
-      title: <p className="text-yellow-500">{data && data.totalRegistrations}</p>,
+      title: (
+        <p className="text-yellow-500">{data && data.totalRegistrations}</p>
+      ),
       subtitle: "Tickets Sold",
     },
     {
@@ -42,11 +50,12 @@ console.log(data);
     },
     {
       icon: <UsersRound className="text-yellow-600 w-6 h-6" />,
-      title: <p className="text-blue-600">{data && data.totalRegistrations + 4}</p>,
+      title: (
+        <p className="text-blue-600">{data && data.totalRegistrations + 4}</p>
+      ),
       subtitle: "Registered Users",
     },
   ];
- 
 
   return (
     <MainLayout>
@@ -81,33 +90,80 @@ console.log(data);
 
               {/* Event Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {data && data.ongoingEvents.map((event: { date: { toString: () => string | number | Date | dayjs.Dayjs | null | undefined; }; starttime: { toString: () => string | number | Date | dayjs.Dayjs | null | undefined; }; registrations: number; image: string | undefined; title: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | null | undefined; }, index: Key | null | undefined) => {
-
-                  const eventDate = event.date ? dayjs(event.date.toString()).format('DD MMM, YYYY') : 'TBA';
-                  const eventTime = event.starttime ? dayjs(event.starttime.toString()).format('hh:mm A') : 'TBA';
-                  const totalParticipants = event.registrations || 0;
-               return (
-                  
-                  <div
-                    key={index}
-                    className="rounded-xl shadow-lg bg-white/60 backdrop-blur-md hover:shadow-xl transition-shadow border border-white/30"
-                  >
-                    <img
-                      src={event.image}
-                      alt="Event"
-                      className="w-full h-48 object-cover rounded-t-xl"
-                    />
-                    <div className="p-4">
-                      <p className="text-lg font-semibold">{event.title}</p>
-                      <div className="flex justify-between items-center">
-                      <p className="text-sm text-gray-600">
-                        {eventDate} | {eventTime}
-                      </p>
-                      <p className="text-sm text-gray-600 bg-blue-500 rounded-full">{totalParticipants}</p>
-                      </div>
-                    </div>
-                  </div>
-                )})}
+                {data &&
+                  data.ongoingEvents.map(
+                    (
+                      event: {
+                        date: {
+                          toString: () =>
+                            | string
+                            | number
+                            | Date
+                            | dayjs.Dayjs
+                            | null
+                            | undefined;
+                        };
+                        starttime: {
+                          toString: () =>
+                            | string
+                            | number
+                            | Date
+                            | dayjs.Dayjs
+                            | null
+                            | undefined;
+                        };
+                        registrations: number;
+                        image: string | undefined;
+                        title:
+                          | string
+                          | number
+                          | boolean
+                          | ReactElement<
+                              any,
+                              string | JSXElementConstructor<any>
+                            >
+                          | Iterable<ReactNode>
+                          | ReactPortal
+                          | null
+                          | undefined;
+                      },
+                      index: Key | null | undefined
+                    ) => {
+                      const eventDate = event.date
+                        ? dayjs(event.date.toString()).format("DD MMM, YYYY")
+                        : "TBA";
+                      const eventTime = event.starttime
+                        ? dayjs(event.starttime.toString()).format("hh:mm A")
+                        : "TBA";
+                      const totalParticipants = event.registrations || 0;
+                      return (
+                        <div
+                          key={index}
+                          className="rounded-xl shadow-lg bg-white/60 backdrop-blur-md hover:shadow-xl transition-shadow border border-white/30"
+                        >
+                          <img
+                            src={event.image}
+                            alt="Event"
+                            className="w-full h-48 object-cover rounded-t-xl"
+                          />
+                          <div className="p-4">
+                            <p className="text-lg font-semibold">
+                              {event.title}
+                            </p>
+                            <div className="flex justify-between items-center">
+                              <p className="text-sm text-gray-600">
+                                {eventDate} | {eventTime}
+                              </p>
+                              <p className="flex items-center gap-1 text-xs text-white bg-blue-300 px-2 py-0.5 rounded-full">
+                                <UsersRound style={{color:"white"}} className="text-white w-4 h-4" />
+                                {totalParticipants}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                  )}
               </div>
             </div>
 
@@ -119,45 +175,86 @@ console.log(data);
             </div>
           </div>
           <div className="bg-white/70 backdrop-blur-lg rounded-xl p-4 shadow-md border border-white/30 mt-8">
-  <div className="flex justify-between items-center mb-4">
-    <p className="text-lg font-semibold">Upcoming Events</p>
-    <Link to="/events" className="text-blue-600 flex items-center gap-1 hover:underline">
-      View All <ChevronRight size={18} />
-    </Link>
-  </div>
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-lg font-semibold">Upcoming Events</p>
+              <Link
+                to="/events"
+                className="text-blue-600 flex items-center gap-1 hover:underline"
+              >
+                View All <ChevronRight size={18} />
+              </Link>
+            </div>
 
-  {/* Upcoming Event Cards */}
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  {data?.upcomingEvents?.map((event: { date: { toString: () => string | number | Date | dayjs.Dayjs | null | undefined; }; starttime: { toString: () => string | number | Date | dayjs.Dayjs | null | undefined; }; registrations: number; image: string | undefined; title: any; }, index: Key | null | undefined) => {
-    const eventDate = event.date ? dayjs(event.date.toString()).format('DD MMM, YYYY') : 'TBA';
-    const eventTime = event.starttime ? dayjs(event.starttime.toString()).format('hh:mm A') : 'TBA';
-    const totalParticipants = event.registrations || 0;
+            {/* Upcoming Event Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {data?.upcomingEvents?.map(
+                (
+                  event: {
+                    date: {
+                      toString: () =>
+                        | string
+                        | number
+                        | Date
+                        | dayjs.Dayjs
+                        | null
+                        | undefined;
+                    };
+                    starttime: {
+                      toString: () =>
+                        | string
+                        | number
+                        | Date
+                        | dayjs.Dayjs
+                        | null
+                        | undefined;
+                    };
+                    registrations: number;
+                    image: string | undefined;
+                    title: any;
+                  },
+                  index: Key | null | undefined
+                ) => {
+                  const eventDate = event.date
+                    ? dayjs(event.date.toString()).format("DD MMM, YYYY")
+                    : "TBA";
+                  const eventTime = event.starttime
+                    ? dayjs(event.starttime.toString()).format("hh:mm A")
+                    : "TBA";
+                  const totalParticipants = event.registrations || 0;
 
-    return (
-      <div
-        key={index}
-        className="rounded-xl shadow-lg bg-white/60 backdrop-blur-md hover:shadow-2xl transition-shadow border border-white/30 overflow-hidden"
-      >
-        {event.image && (
-          <img src={event.image} alt="Event" className="w-full h-48 object-cover rounded-t-xl" />
-        )}
+                  return (
+                    <div
+                      key={index}
+                      className="rounded-xl shadow-lg bg-white/60 backdrop-blur-md hover:shadow-2xl transition-shadow border border-white/30 overflow-hidden"
+                    >
+                      {event.image && (
+                        <img
+                          src={event.image}
+                          alt="Event"
+                          className="w-full h-48 object-cover rounded-t-xl"
+                        />
+                      )}
 
-        <div className="p-4 flex flex-col space-y-2">
-          <p className="text-lg font-semibold text-gray-900">{event.title || 'Untitled Event'}</p>
+                      <div className="p-4 flex flex-col space-y-2">
+                        <p className="text-lg font-semibold text-gray-900">
+                          {event.title || "Untitled Event"}
+                        </p>
 
-          <div className="flex justify-between items-center text-sm text-gray-600">
-            <span>{eventDate} | {eventTime}</span>
-            <span className="bg-blue-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
-          total participants {totalParticipants}
-            </span>
+                        <div className="flex justify-between items-center text-sm text-gray-600">
+                          <span>
+                            {eventDate} | {eventTime}
+                          </span>
+                          <span className="bg-blue-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
+                            total participants {totalParticipants}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+              )}
+            </div>
           </div>
-        </div>
-      </div>
-    );
-  })}
-</div>
-</div>
-
         </div>
       </div>
     </MainLayout>

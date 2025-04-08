@@ -99,7 +99,7 @@ const EventDetails: React.FC = () => {
   const handleDelete = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8000/event/delete/${eventId}`,
+        `${api}/event/delete/${eventId}`,
         {
           method: "DELETE",
           headers: {

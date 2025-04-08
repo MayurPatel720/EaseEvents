@@ -12,7 +12,7 @@ import Calendar from "./Calender";
 import { Link, useNavigate } from "react-router";
 import { useGetAnalytics } from "../Queries/Allquery";
 import dayjs from "dayjs";
-import { Key } from "react";
+import { JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from "react";
 
 const Home = () => {
   const user = useSelector((store: any) => store.auth.user);
@@ -47,34 +47,6 @@ console.log(data);
     },
   ];
  
-  
-
-  const events = [
-    {
-      title: "Creator Meetup",
-      date: "10 Aug, 2024",
-      time: "10:15 AM - 12:30 PM",
-      members: "142 Members",
-      image:
-        "https://teamsonus.site/wp-content/uploads/2024/05/catalogo-de-eventos-en-barcelona.webp",
-    },
-    {
-      title: "Creator Meetup",
-      date: "10 Aug, 2024",
-      time: "10:15 AM - 12:30 PM",
-      members: "142 Members",
-      image:
-        "https://teamsonus.site/wp-content/uploads/2024/05/catalogo-de-eventos-en-barcelona.webp",
-    },
-    {
-      title: "Design Thinking",
-      date: "12 Aug, 2024",
-      time: "8:30 AM - 3:30 PM",
-      members: "245 Members",
-      image:
-        "https://teamsonus.site/wp-content/uploads/2024/05/catalogo-de-eventos-en-barcelona.webp",
-    },
-  ];
 
   return (
     <MainLayout>
@@ -109,7 +81,13 @@ console.log(data);
 
               {/* Event Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {events.map((event, index) => (
+                {data && data.ongoingEvents.map((event: { date: { toString: () => string | number | Date | dayjs.Dayjs | null | undefined; }; starttime: { toString: () => string | number | Date | dayjs.Dayjs | null | undefined; }; registrations: number; image: string | undefined; title: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | null | undefined; }, index: Key | null | undefined) => {
+
+                  const eventDate = event.date ? dayjs(event.date.toString()).format('DD MMM, YYYY') : 'TBA';
+                  const eventTime = event.starttime ? dayjs(event.starttime.toString()).format('hh:mm A') : 'TBA';
+                  const totalParticipants = event.registrations || 0;
+               return (
+                  
                   <div
                     key={index}
                     className="rounded-xl shadow-lg bg-white/60 backdrop-blur-md hover:shadow-xl transition-shadow border border-white/30"
@@ -121,13 +99,15 @@ console.log(data);
                     />
                     <div className="p-4">
                       <p className="text-lg font-semibold">{event.title}</p>
+                      <div className="flex justify-between items-center">
                       <p className="text-sm text-gray-600">
-                        {event.date} | {event.time}
+                        {eventDate} | {eventTime}
                       </p>
-                      <p className="text-sm text-gray-500">{event.members}</p>
+                      <p className="text-sm text-gray-600 bg-blue-500 rounded-full">{totalParticipants}</p>
+                      </div>
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             </div>
 

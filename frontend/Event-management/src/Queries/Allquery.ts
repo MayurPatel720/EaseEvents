@@ -2,9 +2,9 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
-// export const api = "http://localhost:8000";
+export const api = "http://localhost:8000";
 
-export const api = "https://easeevents.onrender.com";
+// export const api = "https://easeevents.onrender.com";
 
 const createEvent = async (formdata: any) => {
   const res = await axios.post(`${api}/event/create_event`, formdata);

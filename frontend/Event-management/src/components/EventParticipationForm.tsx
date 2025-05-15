@@ -41,7 +41,7 @@ const EventParticipationForm: React.FC = () => {
   const toast = useRef<Toast>(null);
   const [showAskPopup, setShowAskPopup] = useState(false);
 const [questionText, setQuestionText] = useState("");
-const [answerText, setAnswerText] = useState(""); 
+const [answerText] = useState(""); 
 
   const [countdown, setCountdown] = useState<Countdown>({
     days: 0,

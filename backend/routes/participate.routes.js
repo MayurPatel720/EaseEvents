@@ -49,6 +49,14 @@ router.post("/delete", async function (req, res) {
     await Participant.deleteMany({ _id: { $in: userids } });
 
     const eventId = deletedParticipants[0].eventId;
+
+
+    await Event.findByIdAndUpdate(
+      eventId,
+      { $pull: { participants: { $in: userids } } }
+    );
+
+    
     const event = await Event.findById(eventId);
     if (event) {
       event.ticketsAvailable += deletedParticipants.length;

@@ -23,6 +23,7 @@ export default function VolunteerLogin() {
     });
 
     dispatch(loginSuccess({ token: res.data.token, user: res.data.volunteer }));
+    setLoading(false);
     if (res) {
       navigate("/VolDashBoard");
     }

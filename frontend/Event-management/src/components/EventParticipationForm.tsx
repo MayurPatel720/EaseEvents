@@ -39,6 +39,10 @@ const EventParticipationForm: React.FC = () => {
   const amount = 500;
   const [isLoading, setIsLoading] = useState(false);
   const toast = useRef<Toast>(null);
+  const [showAskPopup, setShowAskPopup] = useState(false);
+const [questionText, setQuestionText] = useState("");
+const [answerText, setAnswerText] = useState(""); 
+
   const [countdown, setCountdown] = useState<Countdown>({
     days: 0,
     hours: 0,
@@ -195,7 +199,7 @@ const EventParticipationForm: React.FC = () => {
         currency,
       } = orderResponse.data;
       const options = {
-        key: "rzp_test_z9CNJTXfsMnl3s",
+        key: "rzp_test_3DBjtYNoUa8u7a",
         amount: order_amount,
         currency,
         name: "Event Registration",
@@ -265,6 +269,61 @@ const EventParticipationForm: React.FC = () => {
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
       <Toast ref={toast} />
+{/* Ask Question Floating Button */}
+<div className="fixed bottom-6 right-6 z-50">
+  <button
+    onClick={() => setShowAskPopup(!showAskPopup)}
+    className="bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700"
+  >
+    Ask
+  </button>
+</div>
+
+{/* Popup Form */}
+{showAskPopup && (
+  <div className="fixed bottom-20 right-6 bg-white shadow-xl p-4 rounded-lg z-50 w-80">
+    <h3 className="text-lg font-semibold mb-2 text-gray-800">Ask a Question</h3>
+    <InputText
+      value={questionText}
+      onChange={(e) => setQuestionText(e.target.value)}
+      placeholder="Type your question here..."
+      className="w-full mb-2"
+    />
+    <div className="flex justify-end space-x-2">
+      <button
+        onClick={() => setShowAskPopup(false)}
+        className="text-gray-600 hover:text-gray-800 text-sm"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={async () => {
+          try {
+            if (!questionText.trim()) {
+              showToast("error", "Error", "Question cannot be empty.");
+              return;
+            }
+            const response = await axios.post(`${api}/event/sendquestion`, {
+              qu: questionText,
+              ans: answerText,
+              eventid: eventId,
+            });
+            showToast("success", "Success", response.data.message);
+            setQuestionText("");
+            setShowAskPopup(false);
+            refetch(); // Optional, if you want to refresh event data
+          } catch (error: any) {
+            console.error("Ask Question Error:", error);
+            showToast("error", "Failed", error.response?.data?.message || "Failed to submit question");
+          }
+        }}
+        className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 rounded"
+      >
+        Submit
+      </button>
+    </div>
+  </div>
+)}
 
       <div
         style={{

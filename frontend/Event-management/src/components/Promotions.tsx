@@ -1,7 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import EventLayout from "../layout/EventLayout";
 import { useGetAiMessage } from "../Queries/Allquery";
+
+// Define interface for generated content to match API response
+interface GeneratedContent {
+  email: string;
+  message: string;
+  flyer: string; // Base64-encoded PNG image
+}
 
 const AIPromotionGenerator = () => {
   const [eventDetails, setEventDetails] = useState({
@@ -10,34 +16,29 @@ const AIPromotionGenerator = () => {
     time: "",
     location: "",
     description: "",
-    targetAudience: "",
   });
 
   const [prompt, setPrompt] = useState("");
-  const [generatedContent, setGeneratedContent] = useState({
+  const [generatedContent, setGeneratedContent] = useState<GeneratedContent>({
     email: "",
-    sms: "",
-    flyer: {
-      description: "",
-      imageUrl: null,
-    },
+    message: "",
+    flyer: "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("email");
+  const [activeTab, setActiveTab] = useState<"email" | "message" | "flyer">(
+    "email"
+  );
   const { mutate: GetAiMessage, data, isSuccess } = useGetAiMessage();
   console.log(data);
 
-  // Use useEffect to update generatedContent when data changes
+  // Update generatedContent when API data changes
   useEffect(() => {
     if (data && isSuccess) {
       setGeneratedContent({
         email: data.email || "",
-        sms: data.sms || "",
-        flyer: {
-          description: data.flyer?.description || "",
-          imageUrl: data.flyer?.imageUrl || null,
-        },
+        message: data.message || "",
+        flyer: data.flyer || "", // Base64 image string
       });
       setIsLoading(false);
     }
@@ -46,26 +47,18 @@ const AIPromotionGenerator = () => {
   const generateContent = () => {
     setIsLoading(true);
 
-    // Create a detailed prompt based on event details
-    const eventPrompt = `Please generate promotional content for the following event:
-      Event Name: ${eventDetails.name}
-      Date: ${eventDetails.date}
-      Time: ${eventDetails.time}
-      Location: ${eventDetails.location}
-      Description: ${eventDetails.description}
-      Target Audience: ${eventDetails.targetAudience}
-      
-      Additional instructions: ${prompt}
-    `;
-
-    // Send both the prompt and event details to the backend
     GetAiMessage({
-      message: eventPrompt,
-      eventDetails: eventDetails,
+      eventDetails: {
+        eventName: eventDetails.name,
+        date: eventDetails.date,
+        time: eventDetails.time,
+        location: eventDetails.location,
+        description: eventDetails.description,
+      },
     });
   };
 
-  const handleInputChange = (e: { target: { name: any; value: any } }) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setEventDetails((prev) => ({
       ...prev,
@@ -73,19 +66,27 @@ const AIPromotionGenerator = () => {
     }));
   };
 
-  const handlePromptChange = (e: {
-    target: { value: React.SetStateAction<string> };
-  }) => {
+  const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPrompt(e.target.value);
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    // In a real app, you'd add a toast notification here
+    // In a real app, add a toast notification here
+  };
+
+  const downloadFlyer = () => {
+    if (!generatedContent.flyer) return;
+    const link = document.createElement("a");
+    link.href = generatedContent.flyer;
+    link.download = `${eventDetails.name || "event"}-flyer.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const sendToParticipants = () => {
-    // This would integrate with your email/SMS sending service
+    // Integrate with email/SMS sending service
     alert(
       "In a real implementation, this would send content to all participants"
     );
@@ -165,20 +166,6 @@ const AIPromotionGenerator = () => {
 
             <div>
               <label className="block text-sm font-medium mb-1">
-                Target Audience
-              </label>
-              <input
-                type="text"
-                name="targetAudience"
-                value={eventDetails.targetAudience}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded-md"
-                placeholder="Marketing professionals, Business owners"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
                 Custom AI Prompt
               </label>
               <textarea
@@ -213,11 +200,11 @@ const AIPromotionGenerator = () => {
                 </button>
                 <button
                   className={`py-2 px-4 flex items-center gap-2 ${
-                    activeTab === "sms" ? "bg-gray-100 font-medium" : ""
+                    activeTab === "message" ? "bg-gray-100 font-medium" : ""
                   }`}
-                  onClick={() => setActiveTab("sms")}
+                  onClick={() => setActiveTab("message")}
                 >
-                  SMS
+                  Message
                 </button>
                 <button
                   className={`py-2 px-4 flex items-center gap-2 ${
@@ -255,22 +242,23 @@ const AIPromotionGenerator = () => {
                   </div>
                 )}
 
-                {activeTab === "sms" && (
+                {activeTab === "message" && (
                   <div>
                     <pre className="whitespace-pre-wrap bg-gray-50 p-3 rounded min-h-64 max-h-96 overflow-y-auto">
-                      {generatedContent.sms || "Generated SMS will appear here"}
+                      {generatedContent.message ||
+                        "Generated message will appear here"}
                     </pre>
                     <div className="flex gap-2 mt-4">
                       <button
-                        onClick={() => copyToClipboard(generatedContent.sms)}
-                        disabled={!generatedContent.sms}
+                        onClick={() => copyToClipboard(generatedContent.message)}
+                        disabled={!generatedContent.message}
                         className="py-1 px-3 bg-gray-200 rounded-md hover:bg-gray-300 flex items-center gap-1"
                       >
                         Copy
                       </button>
                       <button
                         onClick={sendToParticipants}
-                        disabled={!generatedContent.sms}
+                        disabled={!generatedContent.message}
                         className="py-1 px-3 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-1"
                       >
                         Send to All Participants
@@ -281,47 +269,35 @@ const AIPromotionGenerator = () => {
 
                 {activeTab === "flyer" && (
                   <div>
-                    <div className="flex flex-col md:flex-row gap-4 bg-gray-50 p-3 rounded min-h-64">
-                      {generatedContent.flyer?.imageUrl ? (
+                    <div className="flex flex-col items-center bg-gray-50 p-3 rounded min-h-64">
+                      {generatedContent.flyer ? (
                         <div className="flex-shrink-0 text-center">
                           <img
-                            src={generatedContent.flyer.imageUrl}
+                            src={generatedContent.flyer}
                             alt="Generated event flyer"
                             className="max-h-96 mx-auto"
                           />
                           <p className="text-xs text-gray-500 mt-2">
-                            Sample flyer visual based on your event details
+                            Event flyer generated based on your details
                           </p>
                         </div>
                       ) : (
-                        <div className="flex items-center justify-center h-64 w-full md:w-1/2 text-gray-400">
+                        <div className="flex items-center justify-center h-64 w-full text-gray-400">
                           Flyer image will appear here
                         </div>
                       )}
-
-                      <div className="md:w-1/2 mt-4 md:mt-0">
-                        <h4 className="font-medium mb-2">
-                          Flyer Content Description
-                        </h4>
-                        <pre className="whitespace-pre-wrap overflow-y-auto max-h-64">
-                          {generatedContent.flyer?.description ||
-                            "Flyer description will appear here"}
-                        </pre>
-                      </div>
                     </div>
                     <div className="flex gap-2 mt-4">
                       <button
-                        onClick={() => {
-                          /* Download logic */
-                        }}
-                        disabled={!generatedContent.flyer?.imageUrl}
+                        onClick={downloadFlyer}
+                        disabled={!generatedContent.flyer}
                         className="py-1 px-3 bg-gray-200 rounded-md hover:bg-gray-300 flex items-center gap-1"
                       >
                         Download
                       </button>
                       <button
                         onClick={sendToParticipants}
-                        disabled={!generatedContent.flyer?.description}
+                        disabled={!generatedContent.flyer}
                         className="py-1 px-3 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-1"
                       >
                         Share with All Participants

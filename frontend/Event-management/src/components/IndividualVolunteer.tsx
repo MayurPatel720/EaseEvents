@@ -8,13 +8,18 @@ import "../css/indi.css";
 import { useEffect, useState } from "react";
 import { useGetvolunteerDetails } from "../Queries/Allquery";
 import EventCard from "./VolEvents";
+import { CheckIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
+// Define the Events interface to match the data structure
 interface Events {
   event: string;
   role: string;
   assignedTasks: string;
   _id: string;
   date: string;
+  completed: boolean;
+  eventname: string; // Added to match the data and EventInput in VolEvents.tsx
 }
 
 interface EventData {
@@ -31,6 +36,7 @@ const IndividualVolunteer = () => {
   const [storageStatus, setStorageStatus] = useState<string>(
     "Checking storage..."
   );
+  const navigate = useNavigate();
 
   const getUserData = (): EventData | null => {
     try {
@@ -79,13 +85,19 @@ const IndividualVolunteer = () => {
   useEffect(() => {
     const userData = getUserData();
     if (userData) {
-      setStoredUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
+      const updatedEvents = userData.events.map((event) => ({
+        ...event,
+        completed: event.completed ?? false,
+      }));
+      const updatedUserData = { ...userData, events: updatedEvents };
+      setStoredUser(updatedUserData);
+      localStorage.setItem("user", JSON.stringify(updatedUserData));
       setStorageStatus("User data loaded successfully");
     } else {
       setStorageStatus("No user data found");
+      navigate("/VolLogin"); // Redirect to login if no user data
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -109,12 +121,15 @@ const IndividualVolunteer = () => {
     : [];
 
   console.log(eventsData);
+
+  // Map the events to include user details and correct eventname
   const flattenedEventsData = storedUser?.events.map((event) => ({
     name: storedUser?.name,
     email: storedUser?.email,
     phone: storedUser?.phone,
-    ...event, // Spread the event details into the row
-  }));
+    ...event,
+  })) ?? [];
+
   const tasks = [
     {
       id: 1,
@@ -150,12 +165,24 @@ const IndividualVolunteer = () => {
         setStorageStatus("Session recovered");
       } else {
         setStorageStatus("No recovery data available");
+        navigate("/VolLogin");
       }
     } catch (e) {
       setStorageStatus(
         `Recovery error: ${e instanceof Error ? e.message : "Unknown error"}`
       );
+      navigate("/VolLogin");
     }
+  };
+
+  const toggleTaskCompletion = (eventId: string) => {
+    if (!storedUser) return;
+    const updatedEvents = storedUser.events.map((event) =>
+      event._id === eventId ? { ...event, completed: !event.completed } : event
+    );
+    const updatedUser = { ...storedUser, events: updatedEvents };
+    setStoredUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
   };
 
   if (!storedUser) {
@@ -174,7 +201,7 @@ const IndividualVolunteer = () => {
                 Recover Session
               </button>
               <button
-                onClick={() => (window.location.href = "/VolLogin")}
+                onClick={() => navigate("/VolLogin")}
                 className="px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
               >
                 Return to Login
@@ -185,6 +212,7 @@ const IndividualVolunteer = () => {
       </div>
     );
   }
+
   const formatDate = (dateString: string) => {
     try {
       const datePart = dateString.split(" Off:")[0];
@@ -240,7 +268,7 @@ const IndividualVolunteer = () => {
           <div className="lg:col-span-2">
             <TabView className="bg-gray-800 bg-opacity-50 shadow-lg rounded-xl overflow-hidden border border-gray-700">
               <TabPanel header="Dashboard">
-                <Card className="mb-6 bg-gray-700 bg-opacity-50 shadow-md rounded-lg border border-gray-600 hover:border-gray-500 transition-all duration-300 ">
+                <Card className="mb-6 bg-gray-700 bg-opacity-50 shadow-md rounded-lg border border-gray-600 hover:border-gray-500 transition-all duration-300">
                   <h2 className="text-xl md:text-xl font-semibold flex items-center mb-4 text-white">
                     <i className="pi pi-calendar text-blue-400 mr-2"></i>
                     Upcoming Events
@@ -271,14 +299,12 @@ const IndividualVolunteer = () => {
                           );
                         }}
                       />
-
                       <Column
                         field="eventname"
                         header="Event Name"
                         headerClassName="center-header"
                         className="text-white text-center w-48 sm:w-60 md:w-72"
                       />
-
                       <Column
                         field="role"
                         header="Role"
@@ -312,23 +338,46 @@ const IndividualVolunteer = () => {
 
               <TabPanel header="Events">
                 <Card className="p-6 bg-gray-700 bg-opacity-50 border border-gray-600 hover:border-gray-500 transition-all duration-300">
-                  <EventCard />
+                  <EventCard events={storedUser.events} />
                 </Card>
               </TabPanel>
 
               <TabPanel header="Tasks">
                 <Card className="p-6 bg-gray-700 bg-opacity-50 border border-gray-600 hover:border-gray-500 transition-all duration-300">
-                  <p className="text-center text-gray-400">
-                    Tasks content will go here
-                  </p>
-                </Card>
-              </TabPanel>
-
-              <TabPanel header="Messages">
-                <Card className="p-6 bg-gray-700 bg-opacity-50 border border-gray-600 hover:border-gray-500 transition-all duration-300">
-                  <p className="text-center text-gray-400">
-                    Messages content will go here
-                  </p>
+                  <h2 className="text-xl font-semibold flex items-center mb-6 text-white">
+                    <i className="pi pi-check-square text-green-400 mr-2"></i>
+                    Assigned Tasks
+                  </h2>
+                  <div className="bg-gray-800 bg-opacity-70 border border-gray-600 hover:border-blue-500 transition-all duration-300 rounded-lg shadow-md p-4">
+                    <ul className="space-y-4">
+                      {storedUser.events.map((event) => (
+                        <li
+                          key={event._id}
+                          className="flex justify-between items-center rounded-lg shadow-sm hover:shadow-lg transition-all duration-300"
+                        >
+                          <span
+                            className={`text-white font-medium ${
+                              event.completed ? 'line-through text-gray-400' : ''
+                            }`}
+                          >
+                            {event.assignedTasks ? event.assignedTasks : 'No tasks assigned'}
+                          </span>
+                        {event.assignedTasks && 
+                          <button
+                          onClick={() => toggleTaskCompletion(event._id)}
+                          className={`p-2 rounded-full transition-all duration-300 hover:scale-110 ${
+                            event.completed
+                            ? 'bg-green-500 text-white shadow-md'
+                            : 'bg-blue-600 text-white hover:bg-purple-500'
+                            }`}
+                            >
+                            <CheckIcon className="h-5 w-5" />
+                          </button>
+                          }
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </Card>
               </TabPanel>
             </TabView>

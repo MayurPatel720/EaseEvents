@@ -1,89 +1,196 @@
 const express = require("express");
 const router = express.Router();
-const OpenAI = require("openai");
-require("dotenv").config();
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { createCanvas, loadImage } = require("canvas");
 
-router.post("/sendmessage", async function (req, res) {
+// Initialize Gemini AI with API key from environment
+const genAI = new GoogleGenerativeAI(process.env.genAI);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// POST /ai/generate-prompt
+router.post("/generate-prompt", async (req, res) => {
   try {
-    const { message, eventDetails } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: "Message is required" });
+    const { type } = req.body;
+    console.log("Request body for /generate-prompt:", req.body); // Debug log
+    if (!type) {
+      return res.status(400).json({ error: "Prompt type is required" });
     }
 
-    const enhancedPrompt = `
-Based on the following event details and user instructions, generate three different promotional materials:
+    let systemPrompt;
 
-EVENT DETAILS:
-${
-  eventDetails
-    ? JSON.stringify(eventDetails, null, 2)
-    : "No specific event details provided"
-}
+    // Define prompt based on type
+    switch (type.toLowerCase()) {
+      case "story":
+        systemPrompt = "Generate a creative writing prompt for a short story. The prompt should include a unique setting, a main character, and a central conflict. Format the response as a single sentence.";
+        break;
+      case "art":
+        systemPrompt = "Create an art prompt for a digital illustration, describing a vivid scene with specific colors, mood, and key elements to include. Format the response as a single sentence.";
+        break;
+      case "coding":
+        systemPrompt = "Generate a coding challenge prompt that includes a specific programming task, constraints, and an example use case. Format the response as a single sentence.";
+        break;
+      default:
+        return res.status(400).json({ error: "Invalid prompt type. Use 'story', 'art', or 'coding'." });
+    }
 
-USER INSTRUCTIONS:
-${message}
+    // Call Gemini API
+    const result = await model.generateContent(systemPrompt);
+    const response = await result.response;
+    const promptText = response.text();
 
-Please provide three separate outputs in this specific structure:
-1. EMAIL: A full professional email invitation (300-500 words)
-2. SMS: A brief text message invitation (max 160 characters)
-3. FLYER_DESCRIPTION: A text description of what a promotional flyer should include (bullet points of key visual elements and text)
+    res.status(200).json({ prompt: promptText });
+  } catch (error) {
+    console.error("Error generating prompt:", error);
+    res.status(500).json({ error: "Failed to generate prompt" });
+  }
+});
 
-Format your response exactly as:
----EMAIL_START---
-[Email content here]
----EMAIL_END---
+// POST /ai/generate-event-content
+router.post("/generate-event-content", async (req, res) => {
+  try {
+    const { eventName, date, time, location, description } = req.body.eventDetails;
 
----SMS_START---
-[SMS content here]
----SMS_END---
+    // Validate required fields
+    if (!eventName || !date || !time || !location || !description) {
+      return res.status(400).json({ error: "Missing required fields: eventName, date, time, location, description" });
+    }
 
----FLYER_DESCRIPTION_START---
-[Flyer description here]
----FLYER_DESCRIPTION_END---
-`;
+    // Construct prompt for Gemini API (for email and message only)
+    const systemPrompt = `
+      You are a professional content generator for event promotions, representing EaseEvent, an event management system. Based on the provided event details, generate two types of content: an email and a text message. The content must be engaging, clear, and tailored to the event. Follow these instructions strictly:
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: enhancedPrompt }],
-    });
-    const imagegen = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: "a white siamese cat",
-      n: 1,
-      size: "1024x1024",
-    });
+      - **Event Details**:
+        - Event Name: ${eventName}
+        - Date: ${date}
+        - Time: ${time}
+        - Location: ${location}
+        - Description: ${description}
 
-    const response = completion.choices[0].message.content;
+      - **Output Format**:
+        - **Email**: A plain text email template with a detailed, professional invitation (300–400 words). Include a greeting, event overview, agenda or highlights, benefits of attending, and a call-to-action with a placeholder registration link. Start with "Dear [Attendee]," and end with "Best regards,\\nEaseEvent Team".
+        - **Message**: A concise plain text message (max 160 characters) for SMS or chat, summarizing the event and including a call-to-action with a placeholder link.
 
-    // Parse the response to extract each content type
-    const emailMatch = response.match(
-      /---EMAIL_START---([\s\S]*?)---EMAIL_END---/
-    );
-    const smsMatch = response.match(/---SMS_START---([\s\S]*?)---SMS_END---/);
-    const flyerMatch = response.match(
-      /---FLYER_DESCRIPTION_START---([\s\S]*?)---FLYER_DESCRIPTION_END---/
-    );
+      - **Response Structure**:
+        Return a clean JSON object with two keys: "email" and "message". Each value must be a string. Do NOT include Markdown code fences (e.g., \`\`\`json), comments, or any text outside the JSON object. Ensure the JSON is valid and parseable. Escape special characters (e.g., quotes, newlines) appropriately for JSON.
 
-    const emailContent = emailMatch ? emailMatch[1].trim() : "";
-    const smsContent = smsMatch ? smsMatch[1].trim() : "";
-    const flyerDescription = imagegen.data[0].url;
+      Example response:
+      {
+        "email": "Dear [Attendee],\\nWe are excited to invite you to ... Best regards,\\nEaseEvent Team",
+        "message": "Join [Event Name] on [Date] at [Time] at [Location]! RSVP: [Link]"
+      }
+    `;
 
-    // Generate placeholder image URL for flyer
-    // In a real application, you would integrate with an image generation API like DALL-E
-    // This is a placeholder that your frontend will recognize:
-    const flyerImageUrl = "/api/placeholder/400/500";
+    // Call Gemini API for email and message
+    const result = await model.generateContent(systemPrompt);
+    const response = await result.response;
+    const rawText = response.text();
 
-    return res.json({
-      email: emailContent,
-      sms: smsContent,
-      flyer: flyerDescription,
+    // Log raw response for debugging
+    console.log("Raw Gemini API response:", rawText);
+
+    // Clean the response: remove code fences and extra whitespace
+    let cleanedText = rawText
+      .replace(/```json\n?|\n?```|```/g, '') // Remove ```json and ```
+      .replace(/^\s*|\s*$/g, '') // Trim whitespace
+      .replace(/^.*?\n?\{/, '{'); // Remove any text before the JSON object
+
+    // Parse the cleaned response as JSON
+    let content;
+    try {
+      content = JSON.parse(cleanedText);
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      throw new Error("Invalid JSON response from Gemini API");
+    }
+
+    // Validate response structure
+    if (!content.email || !content.message) {
+      throw new Error("Invalid response structure from Gemini API");
+    }
+
+    // Generate flyer image using node-canvas
+    const width = 595; // A5 at 72 DPI (148mm)
+    const height = 842; // A5 at 72 DPI (210mm)
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext("2d");
+
+    // Gradient Background
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, "#ff6b6b"); // Vibrant red
+    gradient.addColorStop(1, "#4ecdc4"); // Teal
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // Subtle Texture (Simulated with semi-transparent overlay)
+    ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+    ctx.fillRect(0, 0, width, height);
+
+    // Decorative Elements (Circular accents)
+    ctx.strokeStyle = "#ffd700"; // Gold
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(50, 50, 30, 0, Math.PI * 2); // Top-left circle
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(width - 50, height - 50, 40, 0, Math.PI * 2); // Bottom-right circle
+    ctx.stroke();
+
+    // Event Name (Header)
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 40px 'Helvetica Neue', Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(eventName.toUpperCase(), width / 2, 100);
+
+    // Event Details
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "24px 'Helvetica Neue', Arial";
+    ctx.fillText(`Date: ${date}`, width / 2, 200);
+    ctx.fillText(`Time: ${time}`, width / 2, 250);
+    ctx.fillText(`Location: ${location}`, width / 2, 300);
+
+    // Description (Wrap text)
+    ctx.font = "20px 'Helvetica Neue', Arial";
+    const maxWidth = width - 40;
+    let y = 350;
+    const lines = description.split(" ");
+    let line = "";
+    for (let i = 0; i < lines.length; i++) {
+      const testLine = line + lines[i] + " ";
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && line !== "") {
+        ctx.fillText(line, width / 2, y);
+        line = lines[i] + " ";
+        y += 30;
+      } else {
+        line = testLine;
+      }
+    }
+    ctx.fillText(line, width / 2, y);
+
+    // Call-to-Action
+    ctx.fillStyle = "#ffd700"; // Gold
+    ctx.font = "bold 28px 'Helvetica Neue', Arial";
+    ctx.fillText("Register Now!", width / 2, y + 100);
+
+    // QR Code Placeholder (Simulated with a square)
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(width / 2 - 50, y + 150, 100, 100);
+    ctx.fillStyle = "#000000";
+    ctx.font = "16px Arial";
+    ctx.fillText("Scan QR", width / 2, y + 200);
+
+    // Convert canvas to base64
+    const flyerBase64 = canvas.toDataURL("image/png");
+
+    res.status(200).json({
+      flyer: flyerBase64,
+      email: content.email,
+      message: content.message
     });
   } catch (error) {
-    console.error("OpenAI API Error:", error);
-    return res.status(500).json({ error: "Something went wrong" });
+    console.error("Error generating event content:", error);
+    res.status(500).json({ error: "Failed to generate event content" });
   }
 });
 
